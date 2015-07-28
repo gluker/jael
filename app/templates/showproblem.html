@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
     <h1> Problem #{{problem.id}} </h1>
-    <a href="{{url_for('editProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">Edit</a><br>
-    <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">Delete</a><br>
+    <a href="{{url_for('editProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" 
+        class="btn btn-warning btn-xs">Edit</a>
+    <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}"
+        class="btn btn-warning btn-xs">Delete</a><br>
+    <br>
     <form>
-        <div>
+        <div class="">
             {{problem.text|safe}}
         </div>
-        <button type="submit">Check</button>
+        <button type="submit" class="btn btn-default">Check</button>
     </form>
 {% endblock %}
         

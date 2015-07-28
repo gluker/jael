@@ -2,6 +2,7 @@
 {% block title %}List of all courses{% endblock %}
 {% block content %}
     <h1>List of all Courses</h1><br>
+    <a href="{{url_for('newCourse')}}">Create a new course</a><br>
     {% for course in courses %}
         <div>
             <a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a>

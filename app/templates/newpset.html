@@ -2,21 +2,19 @@
 {% block content %}
     <h1>New Problem Set</h1>
     <form method="POST" action="#">
-        <div>
+        <div class="form-group">
             <label for="title">Title:</label>
-            <input type="text" name="title">
+            <input type="text" name="title" class="form-control">
         </div>
-        <div>
+        <div class="form-group">
             <label for="opens">Opens:</label>
-            <input type="date" name="opens">
+            <input type="date" name="opens" class="form-control">
         </div>
-        <div>
+        <div class="form-group">
             <label for="due">Due:</label>
-            <input type="date" name="due">
+            <input type="date" name="due" class="form-control">
         </div>
-        <div>
-            <button type="submit">Create</button>
-        </div>
+        <button type="submit" class="btn btn-default">Create</button>
     </form>
 {% endblock %}
     

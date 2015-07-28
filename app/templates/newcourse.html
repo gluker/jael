@@ -4,8 +4,10 @@
     <h1>Create a new course<h1>
     <br>
     <form method="POST" action="#">
-        <label for="name">Name:</label>
-        <input type="text" name="name">
-        <button type="submit">Create</button>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" name="name" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-default">Create</button>
     </form>
-{% endbolck %}
+{% endblock %}

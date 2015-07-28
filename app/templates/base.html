@@ -1,7 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
 <html>
     <head>
         {% block head %}
             <title>{% block title %}some title{% endblock %}</title>
+            <link rel="stylesheet" href="{{url_for('static',filename='css/lib/bootstrap.css')}}">
         {% endblock %}
     </head>
     <body>
@@ -9,7 +12,7 @@
             {% block header %}
             {% endblock %}
         </header>
-        <main>
+        <main class="container">
             {% block content %}
             {% endblock %}
         </main>

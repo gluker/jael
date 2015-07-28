@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
+    <h1>Edit problem</h1>
     <form method="POST" action="#">
-        <textarea name="text">
-            {{problem.text|safe}}
-        </textarea>
-        <button type="submit">Edit</button>
+        <div class="form-group">
+            <label for="text">Problem text:</label>
+            <textarea name="text" class="form-control" rows=10>
+                {{problem.text|safe}}
+            </textarea>
+        </div>
+        <a class="btn btn-default" 
+            href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">Cancel</a>
+        <button type="submit" class="btn btn-default">Edit</button>
     </form>
 {% endblock %}
