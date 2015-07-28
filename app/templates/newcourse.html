@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Create a new course{% endblock %}
+{% block content %}
+    <h1>Create a new course<h1>
+    <br>
+    <form method="POST" action="#">
+        <label for="name">Name:</label>
+        <input type="text" name="name">
+        <button type="submit">Create</button>
+    </form>
+{% endbolck %}

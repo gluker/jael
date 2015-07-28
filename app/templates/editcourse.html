@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Edit course</h1>
+    <form method="POST" action="#">
+        <label for="name">New name:</label>
+        <input type="text" placeholder="{{course.name}}" name="name">
+        <button type="submit">Edit</button>
+    </form>
+{% endblock %}
