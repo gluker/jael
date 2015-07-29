@@ -27,13 +27,14 @@ class Problem(Base):
 class Question(Base):
     __tablename__ = 'question'
     id = Column(Integer, primary_key=True)
-    type = Column(String(250))
+    name = Column(String(50), nullable=False)
+    type = Column(String(50), nullable=False)
     problem_id = Column(Integer, ForeignKey("problem.id"))
     requirements = relationship("Requirement", backref="question")
 
 class Requirement(Base):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)
-    type = Column(String(250)) #TODO: some sort of enum
-    value = Column(Integer)
+    type = Column(String(50)) #TODO: some sort of enum
+    value = Column(String(50))
     question_id = Column(Integer, ForeignKey("question.id"))

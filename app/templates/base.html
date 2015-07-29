@@ -4,6 +4,10 @@
     <head>
         {% block head %}
             <title>{% block title %}some title{% endblock %}</title>
+            <script src="{{url_for('static',filename='js/lib/jquery-1.11.3.js')}}">
+            </script>
+            <script src="{{url_for('static',filename='js/lib/bootstrap.js')}}">
+            </script>
             <link rel="stylesheet" href="{{url_for('static',filename='css/lib/bootstrap.css')}}">
         {% endblock %}
     </head>

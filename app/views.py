@@ -105,9 +105,17 @@ def deletePSet(course_id,pset_id):
 def newProblem(course_id, pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
+    
     if request.method == "POST":
+        print request.form
         problem = Problem(text=request.form['text'])
         pset.problems.append(problem)
+        for cnt in range(1,int(request.form['counter'])+1):
+           q = Question(name = request.form['name'+str(cnt)],
+                        type = request.form['type'+str(cnt)])
+            #TODO: Add all requirements
+            
+           problem.questions.append(q) 
         db_session.commit()
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset)
