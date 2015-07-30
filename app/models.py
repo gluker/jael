@@ -22,19 +22,11 @@ class Problem(Base):
     id = Column(Integer, primary_key=True)
     text = Column(Text)
     problemset_id = Column(Integer, ForeignKey("problemset.id"))
-    questions = relationship("Question",backref="problem")
-
-class Question(Base):
-    __tablename__ = 'question'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
-    type = Column(String(50), nullable=False)
-    problem_id = Column(Integer, ForeignKey("problem.id"))
-    requirements = relationship("Requirement", backref="question")
+    requirements = relationship("Requirement",backref="problem")
 
 class Requirement(Base):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)
-    type = Column(String(50)) #TODO: some sort of enum
-    value = Column(String(50))
-    question_id = Column(Integer, ForeignKey("question.id"))
+    condition = Column(String(250), nullable=False)
+    comment = Column(String(250))
+    problem_id = Column(Integer, ForeignKey("problem.id"))

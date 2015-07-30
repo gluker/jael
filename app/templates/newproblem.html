@@ -5,46 +5,21 @@
     var qCounter = 1;
     var rCounter = 0;
     $(document).ready(function(){
-       var questionBlock = "\
-            <div class='row'>\
-                <div class='questionblock col-md-3' id='question%id%'>\
-                    <h2>Question %id%</h2>\
-                    <div class='form-group'>\
-                        <label for='name%id%'>Name:</label>\
-                        <input class='form-control' type='text' name='name%id%'>\
-                    </div>\
-                    <div class='form-group'>\
-                        <label for='type%id%'>Type:</label>\
-                        <input  class='form-control' type='text' name='type%id%'>\
-                    </div>\
-                    <button type='button' id='addReq%id%' class='btn btn-default btn-xs'>Add requirement</button>\
+       var requirementBlock = "\
+            <div class='requirementblock row' id='requirement%id%'>\
+                <div class='col-xs-4'>\
+                    <input placeholder='Condition%id%' class='form-control' type='text' name='condition%id%'>\
+                </div>\
+                <div class='col-xs-4'>\
+                    <input placeholder='Comment for %id%'  class='form-control' type='text' name='comment%id%'>\
                 </div>\
             </div>\
         ";
-        var requirementBlock = "\
-            <div class='requirementblock col-md-2' id='q%id%r%rid%'>\
-                <h3>Requirement %rid%</h3>\
-                <div class='form-group'>\
-                    <label for='rtype%rid%'>Type:</label>\
-                    <input type='text' name='rtype%rid%' class='form-control'>\
-                </div>\
-                <div class='form-group'>\
-                    <label for='value%rid%'>Value:</label>\
-                    <input type='text' name='value%rid%' class='form-control'>\
-                </div>\
-            </div>\
-            ";
-        $("#addQuestionBtn").on('click',function(){
-            var newQuestion = questionBlock;
+        $("#addRequirementBtn").on('click',function(){
+            var newRequirement = requirementBlock;
             $("#counter").val(qCounter);
-            newQuestion = newQuestion.replace(/%id%/g,qCounter);
-            $("#questions").prepend(newQuestion);
-            $("#addReq"+qCounter.toString()).on('click',function(){
-                var newReq = requirementBlock;
-                newReq = newReq.replace(/%rid%/g,rCounter++);
-                $("#question"+qCounter.toString()).after(newReq);
-            });
-            qCounter++;
+            newRequirement = newRequirement.replace(/%id%/g,qCounter++);
+            $("#requirements").append(newRequirement);
         });
     });
 </script>
@@ -58,9 +33,9 @@
             <textarea name="text" class="form-control" rows=10>
             </textarea>
         </div>
-            <div id='questions' class="row">
-                <button type="button" class="btn btn-default" id="addQuestionBtn">Add a question</button>
+            <div id='requirements'>
             </div>
+        <button type="button" class="btn btn-default" id="addRequirementBtn">Add a requirement</button>
         <button type="submit" class="btn btn-primary">Create</button>
     </form>
 {% endblock %}

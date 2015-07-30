@@ -1,17 +1,10 @@
+import re
+from parse import *
 from datetime import datetime
 from flask import render_template, request, redirect, url_for
 from database import db_session
 from . import app
-from models import Course, ProblemSet, Problem, Question
-
-### dummy data for testing ###
-courses = [{'id':1, 'name':"Complicated Math"},{'id':2, 'name':"Even more complicated math"}]
-course = courses[0]
-psets = [{'id':1, 'title':"Firsr week of course", 'course_id':1},
-            {'id':2, 'title':"Second", 'course_id':1}]
-pset = psets[1]
-problems = [{'id':1,'text':"Text for 1<sup>st</sup> problem"},{'id':2,'text':"<h3>Problem</h3> blabla"}]
-problem = problems[0]
+from models import Course, ProblemSet, Problem, Requirement
 
 @app.route('/')
 @app.route('/courses/')
@@ -30,7 +23,7 @@ def newCourse():
         return redirect(url_for('showAllCourses'))
     return render_template("newcourse.html")
 
-@app.route('/courses/<int:course_id>')
+@app.route('/courses/<int:course_id>/')
 @app.route('/courses/<int:course_id>/psets/')
 def showCourse(course_id):
     course = db_session.query(Course).get(course_id)
@@ -72,7 +65,7 @@ def newPSet(course_id):
     return render_template("newpset.html",course=course)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/')
-@app.route('/course/<int:course_id>/psets/<int:pset_id>/problems/')
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/')
 def showPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -101,7 +94,7 @@ def deletePSet(course_id,pset_id):
     return render_template("deletepset.html",course=course,pset=pset)
 
 ### Views for Problems ###
-@app.route('/course/<int:course_id>/psets/<int:pset_id>/problems/new/', methods=['GET','POST'])
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/new/', methods=['GET','POST'])
 def newProblem(course_id, pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -111,11 +104,9 @@ def newProblem(course_id, pset_id):
         problem = Problem(text=request.form['text'])
         pset.problems.append(problem)
         for cnt in range(1,int(request.form['counter'])+1):
-           q = Question(name = request.form['name'+str(cnt)],
-                        type = request.form['type'+str(cnt)])
-            #TODO: Add all requirements
-            
-           problem.questions.append(q) 
+           req = Requirement(condition = request.form['condition'+str(cnt)],
+                        comment = request.form['comment'+str(cnt)])
+           problem.requirements.append(req) 
         db_session.commit()
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset)
@@ -142,3 +133,25 @@ def editProblem(course_id,pset_id,problem_id):
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/')
 def deleteProblem(course_id,pset_id,problem_id):
     return render_template("deleteproblem.html",course=course,pset=pset,problem=problem)
+
+
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST","GET"])
+def checkProblem(course_id,pset_id,problem_id):
+    problem = db_session.query(Problem).get(problem_id)
+    form = request.form
+    reqvars = []
+    for req in problem.requirements:
+        divider =  re.search('==',req.condition)
+        if divider:
+            left = req.condition[:divider.start(0)]
+            right = req.condition[divider.end():]
+            print search('$[{}]',left)
+            print search('$[{}]',right)
+
+            print left+" equal to "+ right
+        else:
+            print "dunno!"
+        print search('$[{}]',req.condition).spans
+
+        print req.condition
+    return "qwe"
