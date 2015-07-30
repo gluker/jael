@@ -6,11 +6,33 @@
     <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}"
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
-    <form>
-        <div class="">
+    <form action="./check/" method="GET" >
+        <div class="problemForm">
             {{problem.text|safe}}
+        </div>
+        <div id="messages" class="row">
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
     </form>
+<script>
+    $("form").on("submit", function(event){
+        event.preventDefault();
+        var data_to_send = $(this).serialize(); 
+        console.log(data_to_send);
+        $.ajax({
+            data : data_to_send,
+            url: "{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}",
+            type: "POST",
+            success: function(result){
+                $("#messages").empty();
+                for (index in result){
+                    $("#messages").append("<div class='alert alert-warning'>"+result[index]+"</div>");
+                };
+                console.log(result);
+            }
+        });
+    });
+</script>
+
 {% endblock %}
         

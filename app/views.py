@@ -1,7 +1,9 @@
+import json
+from sympy import *
 import re
 from parse import *
 from datetime import datetime
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify,make_response
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement
@@ -100,7 +102,6 @@ def newProblem(course_id, pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
     
     if request.method == "POST":
-        print request.form
         problem = Problem(text=request.form['text'])
         pset.problems.append(problem)
         for cnt in range(1,int(request.form['counter'])+1):
@@ -138,20 +139,14 @@ def deleteProblem(course_id,pset_id,problem_id):
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST","GET"])
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
-    form = request.form
-    reqvars = []
+    messages = []
     for req in problem.requirements:
-        divider =  re.search('==',req.condition)
-        if divider:
-            left = req.condition[:divider.start(0)]
-            right = req.condition[divider.end():]
-            print search('$[{}]',left)
-            print search('$[{}]',right)
-
-            print left+" equal to "+ right
-        else:
-            print "dunno!"
-        print search('$[{}]',req.condition).spans
-
-        print req.condition
-    return "qwe"
+        cond = req.condition
+        for key in request.form.keys():
+            cond = cond.replace(key,request.form[key])
+        if not sympify(cond):
+            messages.append(req.comment)
+    print messages
+    response = make_response(json.dumps(messages),200)
+    response.headers['Content-Type'] = 'application/json'
+    return response
