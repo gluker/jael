@@ -1,17 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Course #{{course.id}} {% endblock %}
+{% block header %}
+    <ol class="breadcrumb">
+        <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
+        <li class="active">{{course.name}}</li>
+    </ol>
+{% endblock %}
 {% block content %}
-    <h1>{{course.name}}</h1>
+    <div class="page header">
+        <h1>{{course.name}}</h1>
+    </div>
     <br>
     <a href="{{url_for('editCourse',course_id=course.id)}}">Edit Course</a><br>
     <a href="{{url_for('deleteCourse',course_id=course.id)}}">Delete Course</a><br>
     <a href="{{url_for('newPSet',course_id=course.id)}}">Create new pset</a>
     <br><br>
-    {% for pset in psets %}
-        <div>
-            <a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">
+    <div class="list-group">
+        {% for pset in psets %}
+            <a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}" class="list-group-item">
                 {{pset.title}}
             </a>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 {% endblock %}

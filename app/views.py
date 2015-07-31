@@ -7,6 +7,7 @@ from flask import render_template, request, redirect, url_for, jsonify,make_resp
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement
+from forms import ProblemSetForm
 
 @app.route('/')
 @app.route('/courses/')
@@ -54,13 +55,14 @@ def deleteCourse(course_id):
 @app.route('/courses/<int:course_id>/psets/new/', methods=['GET','POST'])
 def newPSet(course_id):
     course = db_session.query(Course).get(course_id)
-    if request.method == "POST":
-        form = request.form
-        pset = ProblemSet(
-            title = form['title'],
-            opens = datetime.strptime(form['opens'],"%d/%m/%Y"),
-            due = datetime.strptime(form['due'],"%d/%m/%Y"),
-            course_id=course.id)
+    form = ProblemSetForm(request.form)
+    if request.method == "POST" and form.validate():
+        print form
+        pset = ProblemSet()
+        pset.title = form.title.data
+        pset.opens = form.opens.data
+        pset.due = form.due.data
+        pset.course_id=course.id
         course.problemsets.append(pset)
         db_session.commit()
         return redirect(url_for("showCourse",course_id=course.id))
@@ -146,7 +148,6 @@ def checkProblem(course_id,pset_id,problem_id):
             cond = cond.replace(key,request.form[key])
         if not sympify(cond):
             messages.append(req.comment)
-    print messages
     response = make_response(json.dumps(messages),200)
     response.headers['Content-Type'] = 'application/json'
     return response

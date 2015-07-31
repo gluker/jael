@@ -1,13 +1,23 @@
 {% extends "base.html" %}
+{% block header %}
+    <ol class="breadcrumb">
+        <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
+        <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
+        <li class="active">{{pset.title}}</li>
+    </ol>
+{% endblock %}
 {% block content %}
-    <h1>{{pset.title}}</h1>
-    <a href="{{url_for('editPSet',course_id=course.id,pset_id=pset.id)}}">Edit</a><br>
-    <a href="{{url_for('deletePSet',course_id=course.id,pset_id=pset.id)}}">Delete</a><br>
-    <a href="{{url_for('newProblem',course_id=course.id,pset_id=pset.id)}}">New Problem</a><br>
+    <div class="page-header">
+        <h1>{{pset.title}}</h1>
+    </div>
+    <a class="btn btn-warning btn-xs" href="{{url_for('editPSet',course_id=course.id,pset_id=pset.id)}}">Edit</a>
+    <a class="btn btn-warning btn-xs" href="{{url_for('deletePSet',course_id=course.id,pset_id=pset.id)}}">Delete</a><br>
+    <br>
+    <div class="list-group">
     {% for problem in problems %}
-        <div>
-            <a
-            href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}</a>
-        </div>
+        <a class="list-group-item"
+        href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}</a>
     {% endfor %}
+    </div>
+    <a class="btn btn-warning" href="{{url_for('newProblem',course_id=course.id,pset_id=pset.id)}}">New Problem</a><br>
 {% endblock %}

@@ -1,4 +1,11 @@
 {% extends "base.html" %}
+{% block header %}
+    <ol class="breadcrumb">
+        <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
+        <li><a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">{{pset.title}}</a></li>
+        <li class="active">{{problem.id}}</li>
+    </ol>
+{% endblock %}
 {% block content %}
     <h1> Problem #{{problem.id}} </h1>
     <a href="{{url_for('editProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" 
@@ -7,10 +14,12 @@
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
     <form action="./check/" method="GET" >
-        <div class="problemForm">
+        <div class="panel panel-default">
+            <div class="panel-body">
             {{problem.text|safe}}
+            </div>
         </div>
-        <div id="messages" class="row">
+        <div id="messages">
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
     </form>

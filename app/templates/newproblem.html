@@ -31,11 +31,13 @@
         <div class="form-group">
             <label for="text">Problem text:</label>
             <textarea name="text" class="form-control" rows=10>
+            {% block problemtext %}
+            {% endblock %}
             </textarea>
         </div>
             <div id='requirements'>
             </div>
         <button type="button" class="btn btn-default" id="addRequirementBtn">Add a requirement</button>
-        <button type="submit" class="btn btn-primary">Create</button>
+        <button type="submit" class="btn btn-primary">{% block button %}Create{% endblock %}</button>
     </form>
 {% endblock %}
