@@ -1,28 +1,22 @@
 {% extends "base.html" %}
-{% block head %}
-{{ super() }}
-    <script>
-        $(function() {
-            $("#datepicker").datepicker();
-        });
-    </script>
-{% endblock %}
 {% block content %}
-    <h1>New Problem Set</h1>
+    <h1>{% block page_title %}New Problem Set{% endblock %}</h1>
     <form method="POST" action="#">
         <div class="form-group">
             <label for="title">Title:</label>
-            <input type="text" name="title" class="form-control">
+            <input type="text" name="title" class="form-control" value="{% block value_title %}{% endblock %}">
         </div>
         <div class="form-group">
             <label for="opens">Opens:</label>
-            <input type="date" name="opens" class="form-control" id="datepicker">
+            <input type="date" name="opens" class="form-control" value="{% block value_opens %}{% endblock %}">
         </div>
         <div class="form-group">
             <label for="due">Due:</label>
-            <input type="date" name="due" class="form-control">
+            <input type="date" name="due" class="form-control" value="{% block value_due %}{% endblock %}">
         </div>
-        <button type="submit" class="btn btn-default">Create</button>
+        <a href="{% block cancel_link %}{{url_for('showCourse',course_id=course.id)}}{% endblock %}" class="btn
+        btn-default">Cancel</a>
+        {% block main_button %}<button type="submit" class="btn btn-primary">Create</button>{% endblock %}
     </form>
 {% endblock %}
     

@@ -80,10 +80,11 @@ def showPSet(course_id,pset_id):
 def editPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
-    if request.method == "POST":
-        pset.title = form['title']
-        pset.opens = datetime.strptime(form['opens'],"%d/%m/%Y")
-        pset.due = datetime.strptime(form['due'],"%d/%m/%Y")
+    form = ProblemSetForm(request.form)
+    if request.method == "POST" and form.validate():
+        pset.title = form.title.data
+        pset.opens = form.opens.data
+        pset.due = form.due.data
         db_session.commit()
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("editpset.html",course=course,pset=pset)
