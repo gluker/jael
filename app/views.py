@@ -133,8 +133,15 @@ def editProblem(course_id,pset_id,problem_id):
         return redirect(url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id))
     return render_template("editproblem.html",course=course,pset=pset,problem=problem)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/')
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/', methods=["GET","POST"])
 def deleteProblem(course_id,pset_id,problem_id):
+    course = db_session.query(Course).get(course_id)
+    pset = db_session.query(ProblemSet).get(pset_id)
+    problem = db_session.query(Problem).get(problem_id)
+    if request.method == "POST":
+        db_session.delete(problem)
+        db_session.commit()
+        return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("deleteproblem.html",course=course,pset=pset,problem=problem)
 
 
