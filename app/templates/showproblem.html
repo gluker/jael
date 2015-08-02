@@ -18,6 +18,7 @@
             <div class="panel-body">
             {{problem.text|safe}}
             </div>
+            <div class="panel-footer">Curent rate: <span id="rate">0</span>%</div>
         </div>
         <div id="messages">
         </div>
@@ -33,9 +34,17 @@
             url: "{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}",
             type: "POST",
             success: function(result){
+                if(result['rate'] !== "undefined"){
+                    $("#rate").text(result['rate']);
+                };
                 $("#messages").empty();
-                for (index in result){
-                    $("#messages").append("<div class='alert alert-warning'>"+result[index]+"</div>");
+                msgs = result['messages']
+                errs = result['errors']
+                for (var index in msgs){
+                    $("#messages").append("<div class='alert alert-warning'>"+msgs[index]+"</div>");
+                };
+                for (var index in errs){
+                    $("#messages").append("<div class='alert alert-danger'>"+errs[index]+"</div>");
                 };
                 console.log(result);
             }

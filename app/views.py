@@ -150,12 +150,30 @@ def deleteProblem(course_id,pset_id,problem_id):
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
     messages = []
+    total = len(request.form)
+    correct = 0.0
     for req in problem.requirements:
         cond = req.condition
         for key in request.form.keys():
-            cond = cond.replace(key,request.form[key])
-        if not sympify(cond):
-            messages.append(req.comment)
-    response = make_response(json.dumps(messages),200)
-    response.headers['Content-Type'] = 'application/json'
-    return response
+            try:
+                check_input(request.form[key])
+                cond = cond.replace(key,request.form[key])
+            except:
+                print "Bad input catched!"
+                return jsonify(errors = ["Please check the input!"])
+        try:
+            res = sympify(cond)
+            if res:
+                correct += 1
+            else:
+                messages.append(req.comment)
+        except:
+            print "Sympify exception"
+            return jsonify(errors = ["Please check the input!"])
+
+    return jsonify(messages = messages, rate = int((correct/total)*100))
+
+
+def check_input(input):
+    if re.search('[\?_">\\<=\']',input):
+        raise Exception("Unwanted symbols")
