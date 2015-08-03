@@ -7,7 +7,7 @@ from flask import render_template, request, redirect, url_for, jsonify,make_resp
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement
-from forms import ProblemSetForm
+from forms import ProblemSetForm, ProblemForm
 
 @app.route('/')
 @app.route('/courses/')
@@ -103,8 +103,8 @@ def deletePSet(course_id,pset_id):
 def newProblem(course_id, pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
-    
-    if request.method == "POST":
+    form = ProblemForm(request.form)
+    if request.method == "POST" and form.validate():
         problem = Problem(text=request.form['text'])
         pset.problems.append(problem)
         for cnt in range(1,int(request.form['counter'])+1):
@@ -158,8 +158,9 @@ def checkProblem(course_id,pset_id,problem_id):
             try:
                 check_input(request.form[key])
                 cond = cond.replace(key,request.form[key])
-            except:
+            except Exception as ext:
                 print "Bad input catched!"
+                print ext
                 return jsonify(errors = ["Please check the input!"])
         try:
             res = sympify(cond)
@@ -175,5 +176,11 @@ def checkProblem(course_id,pset_id,problem_id):
 
 
 def check_input(input):
+    whitelist = ['abs','sin','cos','tan']
     if re.search('[\?_">\\<=\']',input):
         raise Exception("Unwanted symbols")
+    '''
+    for word in re.findall('[a-zA-Z]+',input):
+        if word not in whitelist:
+            raise Exception("Unallowed word: %s" % word)
+    '''
