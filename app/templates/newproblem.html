@@ -30,10 +30,7 @@
         <input type="hidden" name="counter" id="counter" value="0">
         <div class="form-group">
             <label for="text">Problem text:</label>
-            <textarea name="text" class="form-control" rows=10>
-            {% block problemtext %}
-            {% endblock %}
-            </textarea>
+            <textarea name="text" class="form-control" rows=10>{% block problemtext %}{% endblock %}</textarea>
         </div>
             <div id='requirements'>
             </div>

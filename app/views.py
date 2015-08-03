@@ -1,4 +1,4 @@
-import json
+import json, bbcode
 from sympy import *
 import re
 from parse import *
@@ -120,8 +120,8 @@ def showProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    
-    return render_template("showproblem.html",course=course,pset=pset,problem=problem)
+    text = bb_to_html(problem.text)
+    return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
 def editProblem(course_id,pset_id,problem_id):
@@ -184,3 +184,13 @@ def check_input(input):
         if word not in whitelist:
             raise Exception("Unallowed word: %s" % word)
     '''
+
+def bb_to_html(bbtext):
+    parser = bbcode.Parser()
+    parser.newline = '<br>'
+    def input_formatter(tag_name, value, options, parent, context):
+        return '<input type="%s" name="%s" value="%s" >' %(options['type'],options['name'],options['value'])
+
+            
+    parser.add_formatter('input',input_formatter,standalone = True)
+    return parser.format(bbtext)
