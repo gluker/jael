@@ -1,5 +1,7 @@
 from wtforms import Form, StringField, DateTimeField, TextAreaField, FieldList, FormField
 from wtforms.validators import ValidationError, Required
+from HTMLParser import HTMLParser
+
 
 class RequirementForm(Form):
     condition = StringField('Condition',[Required()])

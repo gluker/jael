@@ -115,6 +115,10 @@ def newProblem(course_id, pset_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset)
 
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/newvis/', methods=['GET','POST'])
+def newProblemVisual(course_id,pset_id):
+    return render_template("newproblem_visual.html")
+
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/')
 def showProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
@@ -177,20 +181,25 @@ def checkProblem(course_id,pset_id,problem_id):
 
 def check_input(input):
     whitelist = ['abs','sin','cos','tan']
-    if re.search('[\?_">\\<=\']',input):
+    if re.search('[\?_">\\<=\'{}\[\]]',input):
         raise Exception("Unwanted symbols")
-    '''
+
     for word in re.findall('[a-zA-Z]+',input):
         if word not in whitelist:
             raise Exception("Unallowed word: %s" % word)
-    '''
 
 def bb_to_html(bbtext):
     parser = bbcode.Parser()
     parser.newline = '<br>'
     def input_formatter(tag_name, value, options, parent, context):
-        return '<input type="%s" name="%s" value="%s" >' %(options['type'],options['name'],options['value'])
+        tag ='<input type="'+options['type']
+        if 'name' in options:
+            tag+='" name="'+options['name']
+        if 'value' in options:
+            tag+='" value="'+options['value']
 
+        return '<input type="%s" name="%s" value="%s" >' %(options['type'],options['name'],options['value'])
+    
             
     parser.add_formatter('input',input_formatter,standalone = True)
     return parser.format(bbtext)
