@@ -30,3 +30,27 @@ class Requirement(Base):
     condition = Column(String(250), nullable=False)
     comment = Column(String(250))
     problem_id = Column(Integer, ForeignKey("problem.id"))
+
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(50), nullable=False)
+    email = Column(String(100), nullable=False)
+    courses = relationship("UserCourse")
+    problems = relationship("UserProblem")
+
+class UserProblem(Base):
+    __tablename__ = 'userproblem'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    problem_id = Column(Integer, ForeignKey("problem.id"))
+    rate = Column(Integer)
+    problems = relationship("Problem")
+
+class UserCourse(Base):
+    __tablename__ = "usercourse"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    course_id = Column(Integer, ForeignKey("course.id"))
+    courses = relationship("Course")
+    
