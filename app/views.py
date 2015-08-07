@@ -1,13 +1,12 @@
-import json, bbcode
+import json
 from sympy import *
-import re
-from parse import *
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, jsonify,make_response
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement
 from forms import ProblemSetForm, ProblemForm
+from utils import bb_to_html, check_input
 
 @app.route('/')
 @app.route('/courses/')
@@ -178,28 +177,3 @@ def checkProblem(course_id,pset_id,problem_id):
 
     return jsonify(messages = messages, rate = int((correct/total)*100))
 
-
-def check_input(input):
-    whitelist = ['abs','sin','cos','tan']
-    if re.search('[\?_">\\<=\'{}\[\]]',input):
-        raise Exception("Unwanted symbols")
-
-    for word in re.findall('[a-zA-Z]+',input):
-        if word not in whitelist:
-            raise Exception("Unallowed word: %s" % word)
-
-def bb_to_html(bbtext):
-    parser = bbcode.Parser()
-    parser.newline = '<br>'
-    def input_formatter(tag_name, value, options, parent, context):
-        tag ='<input type="'+options['type']
-        if 'name' in options:
-            tag+='" name="'+options['name']
-        if 'value' in options:
-            tag+='" value="'+options['value']
-
-        return '<input type="%s" name="%s" value="%s" >' %(options['type'],options['name'],options['value'])
-    
-            
-    parser.add_formatter('input',input_formatter,standalone = True)
-    return parser.format(bbtext)
