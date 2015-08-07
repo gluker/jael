@@ -1,5 +1,5 @@
 import json
-from sympy import *
+from sympy import sympify
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, jsonify,make_response
 from database import db_session

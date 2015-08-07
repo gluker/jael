@@ -1,14 +1,36 @@
 import bbcode
 import re
+import ast
+
+class TreeChecker(ast.NodeVisitor):
+    funclist = ['sin','cos','abs','ln']
+    allowed = [
+        'Module','Expr','Expression',
+        'BoolOp','BinOp','Num','Str', 'Compare','Name',
+        'Load',
+        'And','Or',
+        'Add','Sub','Mult','Div','Mod','Pow',
+        'Eq','NotEq','Lt','LtE','Gt','GtE'
+        ]
+
+    def generic_visit(self, node):
+        if type(node).__name__ == 'Call':
+           if node.func.id not in self.funclist:
+               raise ValueError("Function {f} is not allowed".format(f=node.func.id))
+        elif type(node).__name__ not in self.allowed:
+           raise ValueError("Operation type {tp} is not supported".format(tp=type(node).__name__))
+
 
 def check_input(input):
-    whitelist = ['abs','sin','cos','tan']
-    if re.search('[\?_">\\<=\'{}\[\]]',input):
-        raise Exception("Unwanted symbols")
+    
+    tc = TreeChecker()
+    try:
+        atree = ast.parse(input,'','eval')
+        for node in ast.walk(atree):
+            tc.generic_visit(node)
+    except SyntaxError as e:
+        raise e
 
-    for word in re.findall('[a-zA-Z]+',input):
-        if word not in whitelist:
-            raise Exception("Unallowed word: %s" % word)
 
 def bb_to_html(bbtext):
     parser = bbcode.Parser()
@@ -19,9 +41,8 @@ def bb_to_html(bbtext):
             tag+='" name="'+options['name']
         if 'value' in options:
             tag+='" value="'+options['value']
-
-        return '<input type="%s" name="%s" value="%s" >' %(options['type'],options['name'],options['value'])
+        tag+='">'
+        return tag
     
-            
     parser.add_formatter('input',input_formatter,standalone = True)
     return parser.format(bbtext)
