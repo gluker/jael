@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block head %}
+{{ super() }}
+<script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+{% endblock %}
+
+{% block content %}
+    <div id="signinButton">
+        <span class="g-signin"
+            data-scope="openid email"
+            data-clientid="414913450662-3c95nmb38hdit3lhqinqjbq7lpp5h4r1.apps.googleusercontent.com"
+            data-redirecturi="postmessage"
+            data-accesstype="offline"
+            data-cookiepolicy="single_post_origin"
+            data-callback="signInCallback"
+            data-approvalprompt="force">
+        </span>
+    </div>
+    <div id="result"></div>
+
+    <script>
+    function signInCallback(authResult){
+        if (authResult['code']){
+
+            $.ajax({
+                type: "POST",
+                url: '/gconnect?state={{STATE}}',
+                processData: false,
+                contentType: 'application/octet-stream; charset=utf-8;',
+                data: authResult['code'],
+                success: function(result){
+                    if (result) {
+                        $('#result').html('Login Successful!</br>Redirecting...')
+                        setTimeout(function(){
+                            window.location.href="/";
+                        }, 3000);
+                    }else if(authResult['error']) {
+                        console.log('There was an error: '+ authResult['error']);
+                    }else {
+                        $('#result').html('Failed to make a server-side call.');
+                    }
+                }
+            });
+        }
+    }
+
+    
+    </script>
+{% endblock %}

@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+{% block head %}
+{{ super() }}
+<script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+<script src="{{url_for('static',filename='js/lib/ASCIIMathML.js')}}"></script>
+{% endblock %}
 {% block header %}
     <ol class="breadcrumb">
         <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>

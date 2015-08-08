@@ -1,9 +1,14 @@
 import bbcode
 import re
 import ast
+import random
+import string
 
+def state_gen():
+    return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
 class TreeChecker(ast.NodeVisitor):
-    funclist = ['sin','cos','abs','ln']
+    funclist_user = ['sin','cos','abs','ln','tan','ctg']
+    funclist_question = ['limit']
     allowed = [
         'Module','Expr','Expression',
         'BoolOp','BinOp','Num','Str', 'Compare','Name',
@@ -15,7 +20,7 @@ class TreeChecker(ast.NodeVisitor):
 
     def generic_visit(self, node):
         if type(node).__name__ == 'Call':
-           if node.func.id not in self.funclist:
+           if node.func.id not in self.funclist_user+self.funclist_question:
                raise ValueError("Function {f} is not allowed".format(f=node.func.id))
         elif type(node).__name__ not in self.allowed:
            raise ValueError("Operation type {tp} is not supported".format(tp=type(node).__name__))

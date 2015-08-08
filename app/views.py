@@ -1,19 +1,23 @@
 import json
-from sympy import sympify
+from sympy import sympify, limit, oo, symbols
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, jsonify,make_response
+from flask import render_template, request, redirect, url_for, jsonify,make_response, session
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement
 from forms import ProblemSetForm, ProblemForm
-from utils import bb_to_html, check_input
+from utils import bb_to_html, check_input, state_gen
 
 @app.route('/')
 @app.route('/courses/')
 def showAllCourses():
     courses = db_session.query(Course).all()
     return render_template("showallcourses.html",courses=courses)
-
+@app.route('/login/')
+def showLogin():
+    state = state_gen()
+    session['state'] = state
+    return render_template("login.html")
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 def newCourse():
@@ -155,6 +159,7 @@ def checkProblem(course_id,pset_id,problem_id):
     messages = []
     total = len(request.form)
     correct = 0.0
+    ten = 10
     for req in problem.requirements:
         cond = req.condition
         for key in request.form.keys():
@@ -164,15 +169,17 @@ def checkProblem(course_id,pset_id,problem_id):
             except Exception as ext:
                 print "Bad input catched!"
                 print ext
-                return jsonify(errors = ["Please check the input!"])
+                return jsonify(errors = ["Please check the input!",ext.__str__()])
         try:
+            x,y = symbols('x y')
+            check_input(cond)
             res = sympify(cond)
             if res:
                 correct += 1
             else:
                 messages.append(req.comment)
-        except:
-            print "Sympify exception"
+        except Exception as e:
+            print "Sympify exception{e}".format(e=e)
             return jsonify(errors = ["Please check the input!"])
 
     return jsonify(messages = messages, rate = int((correct/total)*100))
