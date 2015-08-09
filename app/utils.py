@@ -3,9 +3,29 @@ import re
 import ast
 import random
 import string
+from models import User
+from database import db_session
 
 def state_gen():
     return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
+
+def create_user(session):
+    user = User()
+    user.email = session['email']
+    user.type = "student"
+    db_session.add(user)
+    db_session.commit()
+    user = db_session.query(User).filter_by(email=session['email']).one()
+    return user.id
+
+def get_user_info(user_id):
+    user = db_session.query(User).get(user_id)
+    return user
+
+def get_user_id(email):
+    user = db_session.query(User).filter_by(email=email)
+    return user.id
+
 class TreeChecker(ast.NodeVisitor):
     funclist_user = ['sin','cos','abs','ln','tan','ctg']
     funclist_question = ['limit']

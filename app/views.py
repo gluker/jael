@@ -5,9 +5,9 @@ from sympy import sympify, limit, oo, symbols
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session
 from database import db_session
 from . import app
-from models import Course, ProblemSet, Problem, Requirement
+from models import Course, ProblemSet, Problem, Requirement, User
 from forms import ProblemSetForm, ProblemForm
-from utils import bb_to_html, check_input, state_gen
+from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials 
 
@@ -97,6 +97,12 @@ def gconnect():
     session['username'] = data['name']
     session['picture'] = data['picture']
     session['email'] = data['email']
+
+    try:
+        session['user_id'] = get_user_id(session['email'])
+    except:
+        user = create_user(session)
+        session['user_id'] = user.id
     return "it's fine!"
     
     
@@ -133,6 +139,13 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
         
+@app.route('/users/')
+def showUserList():
+    users = db_session.query(User).all()
+    output = ""
+    for user in users:
+        output += user.email
+    return output
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 def newCourse():
