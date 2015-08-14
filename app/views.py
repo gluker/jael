@@ -281,7 +281,7 @@ def deleteProblem(course_id,pset_id,problem_id):
     return render_template("deleteproblem.html",course=course,pset=pset,problem=problem)
 
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST","GET"])
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST"])
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
     messages = []

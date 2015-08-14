@@ -1,28 +1,15 @@
 {% extends "base.html" %}
 {% block head %}
 {{ super() }}
-<script>
-    var qCounter = 1;
-    var rCounter = 0;
-    $(document).ready(function(){
-       var requirementBlock = "\
-            <div class='requirementblock row' id='requirement%id%'>\
-                <div class='col-xs-4'>\
-                    <input placeholder='Condition%id%' class='form-control' type='text' name='condition%id%'>\
-                </div>\
-                <div class='col-xs-4'>\
-                    <input placeholder='Comment for %id%'  class='form-control' type='text' name='comment%id%'>\
-                </div>\
-            </div>\
-        ";
-        $("#addRequirementBtn").on('click',function(){
-            var newRequirement = requirementBlock;
-            $("#counter").val(qCounter);
-            newRequirement = newRequirement.replace(/%id%/g,qCounter++);
-            $("#requirements").append(newRequirement);
-        });
-    });
-</script>
+<script src="{{url_for('static', filename='js/newproblem.js')}}"></script>
+{% endblock %}
+{% block header %}
+    <ol class="breadcrumb">
+        <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
+        <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
+        <li><a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">{{pset.title}}</a></li>
+        <li class="active">Create problem</li>
+    </ol>
 {% endblock %}
 {% block content %}
     <h1>Make a new problem for {{pset.title}}</h1>

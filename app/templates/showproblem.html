@@ -18,7 +18,7 @@
     <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}"
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
-    <form action="./check/" method="GET" >
+    <form action="{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" method="GET" >
         <div class="panel panel-default">
             <div class="panel-body">
             {{text|safe}}
@@ -29,33 +29,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
     </form>
-<script>
-    $("form").on("submit", function(event){
-        event.preventDefault();
-        var data_to_send = $(this).serialize(); 
-        console.log(data_to_send);
-        $.ajax({
-            data : data_to_send,
-            url: "{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}",
-            type: "POST",
-            success: function(result){
-                if(result['rate'] !== "undefined"){
-                    $("#rate").text(result['rate']);
-                };
-                $("#messages").empty();
-                msgs = result['messages']
-                errs = result['errors']
-                for (var index in msgs){
-                    $("#messages").append("<div class='alert alert-warning'>"+msgs[index]+"</div>");
-                };
-                for (var index in errs){
-                    $("#messages").append("<div class='alert alert-danger'>"+errs[index]+"</div>");
-                };
-                console.log(result);
-            }
-        });
-    });
-</script>
+<script src="{{url_for('static', filename='js/checkproblem.js')}}"></script>
 
 {% endblock %}
         
