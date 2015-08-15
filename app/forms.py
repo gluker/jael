@@ -17,9 +17,9 @@ class BForm(Form):
 
 class RequirementForm(Form):
     condition = StringField('Condition',[Required()])
-    message = StringField('Message')
+    comment = StringField('Message')
 
-class ProblemForm(Form):
+class ProblemForm(BForm):
     text = TextAreaField('Text',[Required()])
     requirements = FieldList(FormField(RequirementForm))
 

@@ -1,5 +1,38 @@
-{% extends "newproblem.html" %}
-{% block problemtext %}
-{{problem.text|safe}}
+{% extends "base.html" %}
+{% block head %}
+{{ super() }}
+<script src="{{url_for('static', filename='js/newproblem.js')}}"></script>
 {% endblock %}
-{% block button %}Edit{% endblock %}
+{% block header %}
+    <ol class="breadcrumb">
+        <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
+        <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
+        <li><a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">{{pset.title}}</a></li>
+        <li class="active">Create problem</li>
+    </ol>
+{% endblock %}
+{% block content %}
+    <h1>Edit problem</h1>
+    <form method="POST" action="#">
+        {{ form.csrf_token }}
+        <input type="hidden" name="counter" id="counter" value="{{form.requirements.__len__()}}">
+        <div class="form-group">
+            {{form.text.label}}:
+            {{form.text(class="form-control", rows="10")}}
+        </div>
+            <div id='requirements'>
+                {% for field in form.requirements %}
+                    <div class="row">
+                        <div class="col-xs-4">
+                            {{field.condition(class="form-control")}}
+                        </div>
+                        <div class="col-xs-4">
+                            {{field.comment(class="form-control")}}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        <button type="button" class="btn btn-default" id="addRequirementBtn">Add a requirement</button>
+        <button type="submit" class="btn btn-primary">{% block button %}Edit{% endblock %}</button>
+    </form>
+{% endblock %}

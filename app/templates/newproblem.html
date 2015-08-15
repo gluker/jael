@@ -14,6 +14,7 @@
 {% block content %}
     <h1>Make a new problem for {{pset.title}}</h1>
     <form method="POST" action="#">
+        {{ form.csrf_token }}
         <input type="hidden" name="counter" id="counter" value="0">
         <div class="form-group">
             <label for="text">Problem text:</label>

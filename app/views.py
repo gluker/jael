@@ -236,15 +236,13 @@ def newProblem(course_id, pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
     form = ProblemForm(request.form)
     if request.method == "POST" and form.validate():
-        problem = Problem(text=request.form['text'])
+        problem = Problem(text=form.text.data)
         pset.problems.append(problem)
-        for cnt in range(1,int(request.form['counter'])+1):
-           req = Requirement(condition = request.form['condition'+str(cnt)],
-                        comment = request.form['comment'+str(cnt)])
-           problem.requirements.append(req) 
+        for req in form.requirements:
+            problem.requirements.append(Requirement(condition = req.condition.data, comment = req.comment.data))
         db_session.commit()
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
-    return render_template("newproblem.html",course=course,pset=pset)
+    return render_template("newproblem.html",course=course,pset=pset,form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/newvis/', methods=['GET','POST'])
 def newProblemVisual(course_id,pset_id):
@@ -263,11 +261,16 @@ def editProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if request.method == "POST":
-        problem.text = request.form['text']
+    form = ProblemForm(request.form,problem)
+    print form.data
+    if request.method == "POST" and form.validate():
+        problem.text = form.text.data
+        problem.requirements = []
+        for req in form.requirements:
+            problem.requirements.append(Requirement(condition = req.condition.data, comment = req.comment.data))
         db_session.commit()
         return redirect(url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id))
-    return render_template("editproblem.html",course=course,pset=pset,problem=problem)
+    return render_template("editproblem.html",course=course,pset=pset,problem=problem,form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/', methods=["GET","POST"])
 def deleteProblem(course_id,pset_id,problem_id):
