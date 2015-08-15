@@ -19,7 +19,7 @@
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
     <form action="{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" method="GET" >
-        <div class="panel panel-default">
+        <div class="panel panel-default" id="panel">
             <div class="panel-body">
             {{text|safe}}
             </div>

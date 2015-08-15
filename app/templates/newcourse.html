@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Create a new course{% endblock %}
 {% block content %}
-    <h1>Create a new course<h1>
-    <br>
+    <h1>Create a new course</h1>
     <form method="POST" action="#">
+        {{ form.csrf_token }}
         <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" name="name" class="form-control">
+            {{ form.name.label }}:
+            {{ form.name(class="form-control") }}
         </div>
-        <button type="submit" class="btn btn-default">Create</button>
+        <a href="{{url_for('showAllCourses')}}" class="btn btn-default">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create</button>
     </form>
 {% endblock %}

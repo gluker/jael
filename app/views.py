@@ -6,10 +6,10 @@ from flask import render_template, request, redirect, url_for, jsonify,make_resp
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
-from forms import ProblemSetForm, ProblemForm
+from forms import ProblemSetForm, ProblemForm, CourseForm
 from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id
 from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError, OAuth2Credentials 
+from oauth2client.client import FlowExchangeError, OAuth2Credentials
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
 
@@ -149,13 +149,14 @@ def showUserList():
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 def newCourse():
-    if request.method == "POST":
-        name = request.form['name']
+    form = CourseForm(request.form)
+    if request.method == "POST" and form.validate():
+        name = form.name.data
         course = Course(name=name)
         db_session.add(course)
         db_session.commit()
         return redirect(url_for('showAllCourses'))
-    return render_template("newcourse.html")
+    return render_template("newcourse.html",form=form)
 
 @app.route('/courses/<int:course_id>/')
 @app.route('/courses/<int:course_id>/psets/')
@@ -188,7 +189,6 @@ def newPSet(course_id):
     course = db_session.query(Course).get(course_id)
     form = ProblemSetForm(request.form)
     if request.method == "POST" and form.validate():
-        print form
         pset = ProblemSet()
         pset.title = form.title.data
         pset.opens = form.opens.data
@@ -197,7 +197,7 @@ def newPSet(course_id):
         course.problemsets.append(pset)
         db_session.commit()
         return redirect(url_for("showCourse",course_id=course.id))
-    return render_template("newpset.html",course=course)
+    return render_template("newpset.html",course=course,form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/')
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/')
@@ -287,17 +287,17 @@ def checkProblem(course_id,pset_id,problem_id):
     messages = []
     total = len(request.form)
     correct = 0.0
-    ten = 10
     for req in problem.requirements:
         cond = req.condition
         for key in request.form.keys():
             try:
                 check_input(request.form[key])
                 cond = cond.replace(key,request.form[key])
-            except Exception as ext:
-                print "Bad input catched!"
-                print ext
+            except ValueError as ext:
                 return jsonify(errors = ["Please check the input!",ext.__str__()])
+            except Exception as ext:
+                print ext
+                return jsonify(errors = ["Please check the input!"])
         try:
             x,y = symbols('x y')
             check_input(cond)
@@ -306,8 +306,10 @@ def checkProblem(course_id,pset_id,problem_id):
                 correct += 1
             else:
                 messages.append(req.comment)
-        except Exception as e:
+        except SympifyError as e:
             print "Sympify exception{e}".format(e=e)
+            return jsonify(errors = ["Please check the input!"])
+        except Exception as e:
             return jsonify(errors = ["Please check the input!"])
 
     return jsonify(messages = messages, rate = int((correct/total)*100))

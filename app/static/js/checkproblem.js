@@ -8,6 +8,11 @@ $("form").on("submit", function(event){
         type: "POST",
         success: function(result){
             if(result['rate'] !== "undefined"){
+                if (result['rate'] == "100"){
+                    $("#panel").attr("class","panel panel-success");
+                } else{
+                    $("#panel").attr("class","panel panel-default");
+                }
                 $("#rate").text(result['rate']);
             };
             $("#messages").empty();
