@@ -29,6 +29,9 @@
                         <div class="col-xs-4">
                             {{field.comment(class="form-control")}}
                         </div>
+                        <div class="col-xs-1">
+                            <button type="button" onclick="removeRequirement(this);" class="btn btn-danger btn-sm">X</button>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
