@@ -10,12 +10,65 @@ from forms import ProblemSetForm, ProblemForm, CourseForm
 from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials
+from flask_oauth import OAuth
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
 
 CLIENT_ID = json.loads(
     open(PATH_TO_CLIENT_SECRET, 'r').read())['web']['client_id']
+CLIENT_SECRET = json.loads(
+    open(PATH_TO_CLIENT_SECRET, 'r').read())['web']['client_secret']
 APPLICATION_NAME = "Jaot"
+
+
+oauth = OAuth()
+    
+facebook = oauth.remote_app('facebook',
+    base_url = "https://graph.facebook.com/v2.3/",
+    request_token_url = None,
+    access_token_url = "/oauth/access_token",
+    authorize_url="https://www.facebook.com/dialog/oauth",
+    consumer_key = app.config['FB_APP_KEY'],
+    consumer_secret = app.config['FB_APP_SECRET'],
+    request_token_params = {'scope':'email'}
+    )
+
+@facebook.tokengetter
+def get_facebook_token(token=None):
+    return session.get('facebook_token')
+
+@app.route("/fblogin")
+def fblogin():
+    return facebook.authorize(callback = 'http://localhost:5000/login_handler/')
+
+@app.route("/login_handler/")
+@facebook.authorized_handler
+def loginHandler(resp):
+    session['facebook_token'] = resp['access_token']
+    r = requests.get("https://graph.facebook.com/v2.3/oauth/access_token"+
+        "?client_id="+facebook.consumer_key+
+        "&client_secret="+facebook.consumer_secret+
+        "&grant_type=client_credentials")
+    app_token = json.loads(r.text)["access_token"]
+    r = requests.get("https://graph.facebook.com/debug_token"+
+        "?input_token="+session['facebook_token']+
+        "&access_token="+app_token)
+    session["facebook_id"] = json.loads(r.text)["data"]["user_id"]
+    r = requests.get(facebook.base_url+session['facebook_id']+"?access_token="+session['facebook_token']+"&fields=email,name")
+    session['username'] = json.loads(r.text)["name"]
+    session['email'] = json.loads(r.text)["email"]
+
+    try:
+        session['user_id'] = get_user_id(session['email'])
+    except:
+        user = create_user(session)
+        session['user_id'] = user
+    
+    print r.text
+    
+    return redirect(url_for('showAllCourses'))
+    
+
 
 @app.route('/')
 @app.route('/courses/')
@@ -107,6 +160,10 @@ def gconnect():
     
     
 
+@app.route('/fblog')
+def fbLogin():
+    return render_template('fb_login_temp.html')
+
 @app.route('/gdisconnect')
 def gdisconnect():
         # Only disconnect a connected user.
@@ -142,10 +199,7 @@ def gdisconnect():
 @app.route('/users/')
 def showUserList():
     users = db_session.query(User).all()
-    output = ""
-    for user in users:
-        output += user.email
-    return output
+    return render_template("showusers.html", users=users)
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 def newCourse():

@@ -10,6 +10,7 @@ def state_gen():
     return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
 
 def create_user(session):
+    assert db_session.query(User).filter_by(email=session['email']).first() == None
     user = User()
     user.email = session['email']
     user.type = "student"
@@ -23,7 +24,7 @@ def get_user_info(user_id):
     return user
 
 def get_user_id(email):
-    user = db_session.query(User).filter_by(email=email)
+    user = db_session.query(User).filter_by(email=email).one()
     return user.id
 
 class TreeChecker(ast.NodeVisitor):
