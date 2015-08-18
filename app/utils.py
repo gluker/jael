@@ -5,6 +5,17 @@ import random
 import string
 from models import User
 from database import db_session
+from . import app
+
+def check_permissions(course_id,user_id):
+    user = db_session.query(User).get(user_id)
+    if user.type == "admin":
+        return "edit"
+    elif user.type == "editor":
+        #TODO: rights for specific course
+        return "edit"
+    elif user.type == "student":
+        return "view"
 
 def state_gen():
     return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
@@ -13,7 +24,10 @@ def create_user(session):
     assert db_session.query(User).filter_by(email=session['email']).first() == None
     user = User()
     user.email = session['email']
-    user.type = "student"
+    if user.email == app.config['ADMIN_EMAIL']:
+        user.type="admin"
+    else:
+        user.type = "student"
     db_session.add(user)
     db_session.commit()
     user = db_session.query(User).filter_by(email=session['email']).one()

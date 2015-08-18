@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, DateTimeField, TextAreaField, FieldList, FormField
+from wtforms import Form, StringField, DateTimeField, TextAreaField, FieldList, FormField, SelectMultipleField, IntegerField, SelectField
 from wtforms.validators import ValidationError, Required
 from HTMLParser import HTMLParser
 from flask import session
@@ -25,6 +25,12 @@ class ProblemForm(BForm):
 
 class CourseForm(BForm):
     name = StringField('Name', [Required()])
+
+class UserForm(BForm):
+    id = IntegerField('Id')
+    email = StringField('Email')
+    type = SelectField('User Type', choices=[('admin','Administrator'),('editor','Editor'),('student','Student')])
+    courses = SelectMultipleField('Courses')
 
 class ProblemSetForm(BForm):
     title = StringField('Title', [Required()])

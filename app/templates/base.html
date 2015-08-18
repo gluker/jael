@@ -2,17 +2,35 @@
 <html lang="en">
 <html>
     <head>
+        {% macro logout() %}
+            <span class="pull-right">
+                <a class="btn btn-default btn-xs" href="{{url_for('logout')}}">Logout</a>
+            </span>
+        {% endmacro %}
         {% block head %}
             <title>{% block title %}some title{% endblock %}</title>
             <script src="{{url_for('static',filename='js/lib/jquery-1.11.3.js')}}">
             </script>
             <script src="{{url_for('static',filename='js/lib/bootstrap.js')}}">
             </script>
+
             <link rel="stylesheet" href="{{url_for('static',filename='css/lib/bootstrap.css')}}">
+            <link rel="stylesheet" href="{{url_for('static',filename='css/lib/font-awesome/css/font-awesome.css')}}">
+            <link rel="stylesheet" href="{{url_for('static',filename='css/lib/bootstrap-social.css')}}">
+            <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
         {% endblock %}
     </head>
     <body>
         <header class="container">
+            {% with messages = get_flashed_messages() %}
+               {% if messages %}
+                 <div class="flashes">
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
             {% block header %}
             {% endblock %}
         </header>

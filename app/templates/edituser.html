@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+    <form action="#" method="POST">
+        <div class="form-group">
+        <h1>Edit user {{user.id}}</h1>
+        {{form.id.label}}:
+        {{form.id(class="form-control")}}
+        {{form.email.label}}:
+        {{form.email(class="form-control")}}
+        {{form.type.label}}:
+        {{form.type(class="form-control")}}
+        </div>
+        <a class="btn btn-default" href="{{url_for('showUsers')}}">Cancel</a>
+        <button type="submit" class="btn btn-warning">Edit</button>
+    </form>
+{% endblock %}

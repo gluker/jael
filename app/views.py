@@ -1,13 +1,14 @@
+from functools import wraps
 import json
 import httplib2
 import requests
 from sympy import sympify, limit, oo, symbols
-from flask import render_template, request, redirect, url_for, jsonify,make_response, session
+from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
-from forms import ProblemSetForm, ProblemForm, CourseForm
-from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id
+from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
+from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id, check_permissions
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials
 from flask_oauth import OAuth
@@ -32,6 +33,15 @@ facebook = oauth.remote_app('facebook',
     consumer_secret = app.config['FB_APP_SECRET'],
     request_token_params = {'scope':'email'}
     )
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "email" not in session:
+            flash("Need to log in first")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @facebook.tokengetter
 def get_facebook_token(token=None):
@@ -60,24 +70,41 @@ def loginHandler(resp):
 
     try:
         session['user_id'] = get_user_id(session['email'])
-    except:
-        user = create_user(session)
-        session['user_id'] = user
-    
-    print r.text
-    
+        flash("Logged in as "+session['email'])
+    except Exception as e:
+        print "can't get user"
+        print e
+        try:
+            user = create_user(session)
+            session['user_id'] = user
+            flash("Wellcome, "+session['username'])
+        except Exception as e:
+            print "can't create"
+            print e
     return redirect(url_for('showAllCourses'))
     
 
 
 @app.route('/')
 @app.route('/courses/')
+@login_required
 def showAllCourses():
     courses = db_session.query(Course).all()
     return render_template("showallcourses.html",courses=courses)
     
+@app.route('/logout/')
+@login_required
+def logout():
+    for attr in ['user_id','email','username']:
+        del session[attr]
+    flash("Logged out")
+    return redirect(url_for('login'))
+
 @app.route('/login/')
-def showLogin():
+def login():
+    if "email" in session:
+        flash("Already logged in")
+        return redirect(url_for("showAllCourses"))
     state = state_gen()
     session['state'] = state
     return render_template("login.html", STATE=state)
@@ -153,17 +180,22 @@ def gconnect():
 
     try:
         session['user_id'] = get_user_id(session['email'])
-    except:
-        user = create_user(session)
-        session['user_id'] = user.id
-    return "it's fine!"
+        flash("Logged in as "+session['email'])
+    except Exception as e:
+        print "can't get user"
+        print e
+        try:
+            user = create_user(session)
+            session['user_id'] = user
+            flash("Wellcome, "+session['username'])
+        except Exception as e:
+            print "can't create"
+            flash("Sum Tin Wong")
+            print e
+    flash("Logged in as "+session["email"])
+    return redirect(url_for('showAllCourses'))
+   
     
-    
-
-@app.route('/fblog')
-def fbLogin():
-    return render_template('fb_login_temp.html')
-
 @app.route('/gdisconnect')
 def gdisconnect():
         # Only disconnect a connected user.
@@ -197,9 +229,29 @@ def gdisconnect():
         return response
         
 @app.route('/users/')
-def showUserList():
+@login_required
+def showUsers():
     users = db_session.query(User).all()
-    return render_template("showusers.html", users=users)
+    courses = db_session.query(Course).all()
+    return render_template("showusers.html", users=users,courses=courses)
+
+@app.route('/users/<int:user_id>/delete/', methods=['POST','GET'])
+def deleteUser(user_id):
+    user = db_session.query(User).get(user_id)
+    if request.method == "POST":
+        db_session.delete(user)
+        db_session.commit()
+        flash("User deleted")
+        return redirect(url_for('showUsers'))
+    return render_template('deleteuser.html')
+
+@app.route('/users/<int:user_id>/edit/', methods=['POST','GET'])
+def editUser(user_id):
+    user = db_session.query(User).get(user_id)
+    form = UserForm(request.form,user)
+    courses = db_session.query(Course).all()
+    
+    return render_template("edituser.html",user=user,courses=courses, form=form)
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 def newCourse():
@@ -214,10 +266,11 @@ def newCourse():
 
 @app.route('/courses/<int:course_id>/')
 @app.route('/courses/<int:course_id>/psets/')
+@login_required
 def showCourse(course_id):
     course = db_session.query(Course).get(course_id)
     psets = course.problemsets
-    return render_template("showcourse.html",course=course,psets=psets)
+    return render_template("showcourse.html",course=course,psets=psets,perm=check_permissions(course.id,session['user_id']))
 
 @app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
 def editCourse(course_id):

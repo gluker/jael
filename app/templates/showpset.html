@@ -4,14 +4,17 @@
         <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
         <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
         <li class="active">{{pset.title}}</li>
+        {{ logout() }}
     </ol>
 {% endblock %}
 {% block content %}
     <div class="page-header">
         <h1>{{pset.title}}</h1>
     </div>
+    {% if perm == "edit" %}
     <a class="btn btn-warning btn-xs" href="{{url_for('editPSet',course_id=course.id,pset_id=pset.id)}}">Edit</a>
     <a class="btn btn-warning btn-xs" href="{{url_for('deletePSet',course_id=course.id,pset_id=pset.id)}}">Delete</a><br>
+    {% endif %}
     <br>
     <div class="list-group">
     {% for problem in problems %}
@@ -19,5 +22,7 @@
         href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}</a>
     {% endfor %}
     </div>
+    {% if perm == "edit" %}
     <a class="btn btn-warning" href="{{url_for('newProblem',course_id=course.id,pset_id=pset.id)}}">New Problem</a><br>
+    {% endif %}
 {% endblock %}
