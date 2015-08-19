@@ -71,7 +71,7 @@ def loginHandler(resp):
         print "can't get user"
         print e
         try:
-            user = create_user(session)
+            user = create_user(email)
             login_user(user)
             flash("Wellcome")
         except Exception as e:
@@ -245,7 +245,14 @@ def editUser(user_id):
     user = db_session.query(User).get(user_id)
     form = UserForm(request.form,user)
     courses = db_session.query(Course).all()
-    
+    if request.method == "POST" and form.validate():
+        user.type = form.type.data
+        user.courses = []
+        for field in request.form:
+            if request.form[field] == "on":
+                course = db_session.query(Course).get(int(field))
+                user.courses.append(course)
+        db_session.commit()
     return render_template("edituser.html",user=user,courses=courses, form=form)
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])

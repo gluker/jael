@@ -25,7 +25,7 @@ def state_gen():
     return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
 
 def create_user(email):
-    assert db_session.query(User).filter_by(email=email).first() == None
+    #assert db_session.query(User).filter_by(email=email).first() == None
     user = User()
     user.email = email
     if user.email == app.config['ADMIN_EMAIL']:
