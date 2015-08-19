@@ -244,6 +244,8 @@ def deleteUser(user_id):
 @app.route('/users/<int:user_id>/edit/', methods=['POST','GET'])
 def editUser(user_id):
     user = db_session.query(User).get(user_id)
+    if user == None:
+        abort(404)
     form = UserForm(request.form,user)
     courses = db_session.query(Course).all()
     if request.method == "POST" and form.validate():
@@ -280,6 +282,8 @@ def showCourse(course_id):
 @app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
 def editCourse(course_id):
     course = db_session.query(Course).get(course_id)
+    if course == None:
+        abort(404)
     if request.method == "POST":
         course.name = request.form['name']
         db_session.commit()
@@ -289,6 +293,8 @@ def editCourse(course_id):
 @app.route('/courses/<int:course_id>/delete/', methods=['GET','POST'])
 def deleteCourse(course_id):
     course = db_session.query(Course).get(course_id)
+    if course == None:
+        abort(404)
     if request.method == "POST":
         db_session.delete(course)
         db_session.commit()
@@ -299,6 +305,8 @@ def deleteCourse(course_id):
 @app.route('/courses/<int:course_id>/psets/new/', methods=['GET','POST'])
 def newPSet(course_id):
     course = db_session.query(Course).get(course_id)
+    if course == None:
+        abort(404)
     form = ProblemSetForm(request.form)
     if request.method == "POST" and form.validate():
         pset = ProblemSet()
@@ -316,7 +324,7 @@ def newPSet(course_id):
 def showPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
-    if course == None or pset == None or pset.course_id != course_id:
+    if None in [pset,course] or pset.course_id != course_id:
         abort(404)
     problems = pset.problems
     return render_template("showpset.html",course=course,pset=pset,problems=problems)
@@ -325,6 +333,8 @@ def showPSet(course_id,pset_id):
 def editPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
+    if None in [pset,course] or pset.course_id != course_id:
+        abort(404)
     form = ProblemSetForm(request.form)
     if request.method == "POST" and form.validate():
         pset.title = form.title.data
@@ -337,6 +347,8 @@ def editPSet(course_id,pset_id):
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/delete/', methods=["GET",'POST'])
 def deletePSet(course_id,pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
+    if pset == None or pset.course_id != course_id:
+        abort(404)
     if request.method == "POST":
         db_session.delete(pset)
         db_session.commit()
@@ -348,6 +360,8 @@ def deletePSet(course_id,pset_id):
 def newProblem(course_id, pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
+    if None in [pset,course] or pset.course_id != course_id:
+        abort(404)
     form = ProblemForm(request.form)
     if request.method == "POST" and form.validate():
         problem = Problem(text=form.text.data)
@@ -358,15 +372,13 @@ def newProblem(course_id, pset_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset,form=form)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/newvis/', methods=['GET','POST'])
-def newProblemVisual(course_id,pset_id):
-    return render_template("newproblem_visual.html")
-
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/')
 def showProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+        abort(404)
     text = bb_to_html(problem.text)
     return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text)
 
@@ -375,6 +387,8 @@ def editProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+        abort(404)
     form = ProblemForm(request.form,problem)
     print form.data
     if request.method == "POST" and form.validate():
@@ -391,6 +405,8 @@ def deleteProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+        abort(404)
     if request.method == "POST":
         db_session.delete(problem)
         db_session.commit()
