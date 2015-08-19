@@ -10,7 +10,6 @@ from . import app
 
 login_manager = LoginManager()
 
-
 def check_permissions(course_id,user_id):
     user = db_session.query(User).get(user_id)
     if user.type == "admin":
@@ -67,7 +66,6 @@ class TreeChecker(ast.NodeVisitor):
 
 
 def check_input(input):
-    
     tc = TreeChecker()
     try:
         atree = ast.parse(input,'','eval')
@@ -75,7 +73,6 @@ def check_input(input):
             tc.generic_visit(node)
     except SyntaxError as e:
         raise e
-
 
 def bb_to_html(bbtext):
     parser = bbcode.Parser()

@@ -5,9 +5,9 @@
         <h1>Edit user {{user.id}}</h1>
         {{form.csrf_token}}
         {{form.id.label}}:
-        {{form.id(class="form-control")}}
+        {{form.id(class="form-control", disabled="True")}}
         {{form.email.label}}:
-        {{form.email(class="form-control")}}
+        {{form.email(class="form-control", disabled="True")}}
         {{form.type.label}}:
         {{form.type(class="form-control")}}
         {% for course in courses %}

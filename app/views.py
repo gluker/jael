@@ -3,7 +3,7 @@ import json
 import httplib2
 import requests
 from sympy import sympify, limit, oo, symbols
-from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash
+from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
@@ -13,6 +13,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
+from flask_principal import Principal, Permission, RoleNeed
 
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
@@ -97,7 +98,7 @@ def logout():
 
 @app.route('/login/')
 def login():
-    if "email" in session:
+    if current_user.is_authenticated():
         flash("Already logged in")
         return redirect(url_for("showAllCourses"))
     state = state_gen()
@@ -271,6 +272,8 @@ def newCourse():
 @login_required
 def showCourse(course_id):
     course = db_session.query(Course).get(course_id)
+    if course == None:
+        abort(404)
     psets = course.problemsets
     return render_template("showcourse.html",course=course,psets=psets,perm=check_permissions(course.id,session['user_id']))
 
@@ -313,6 +316,8 @@ def newPSet(course_id):
 def showPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
+    if course == None or pset == None or pset.course_id != course_id:
+        abort(404)
     problems = pset.problems
     return render_template("showpset.html",course=course,pset=pset,problems=problems)
 
@@ -426,3 +431,6 @@ def checkProblem(course_id,pset_id,problem_id):
 
     return jsonify(messages = messages, rate = int((correct/total)*100))
 
+@app.errorhandler(404)
+def error404(e):
+    return render_template('errors/404.html')
