@@ -1,14 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-    <form action="#" method="POST">
+    <form action="#" method="GET">
         <div class="form-group">
         <h1>Edit user {{user.id}}</h1>
+        {{form.csrf_token}}
         {{form.id.label}}:
         {{form.id(class="form-control")}}
         {{form.email.label}}:
         {{form.email(class="form-control")}}
         {{form.type.label}}:
         {{form.type(class="form-control")}}
+        
+        <select name="courses" multiple class="form-control">
+        {% for course in courses %}
+            <option value="{{course.id}}">{{course.name}}</option>
+        {% endfor %}
+        </select>
         </div>
         <a class="btn btn-default" href="{{url_for('showUsers')}}">Cancel</a>
         <button type="submit" class="btn btn-warning">Edit</button>

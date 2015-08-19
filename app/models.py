@@ -1,6 +1,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, Integer, String, Date, Text
 from database import Base
+from flask_login import UserMixin
 
 class Course(Base):
     __tablename__ = 'course'
@@ -31,7 +32,7 @@ class Requirement(Base):
     comment = Column(String(250))
     problem_id = Column(Integer, ForeignKey("problem.id"))
 
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     type = Column(String(50), nullable=False)

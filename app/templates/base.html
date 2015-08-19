@@ -8,7 +8,7 @@
             </span>
         {% endmacro %}
         {% block head %}
-            <title>{% block title %}some title{% endblock %}</title>
+            <title>{% block title %}{% endblock %}- Jaot</title>
             <script src="{{url_for('static',filename='js/lib/jquery-1.11.3.js')}}">
             </script>
             <script src="{{url_for('static',filename='js/lib/bootstrap.js')}}">
@@ -22,6 +22,7 @@
     </head>
     <body>
         <header class="container">
+            {{current_user.email}}, {{current_user.type}}
             {% with messages = get_flashed_messages() %}
                {% if messages %}
                  <div class="flashes">

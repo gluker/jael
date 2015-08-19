@@ -15,7 +15,6 @@ $(function(){
       });
     var gbutton = document.getElementById('gbutton');
     auth2.attachClickHandler(gbutton,{},function(user){
-            authIn = gapi.auth2.getAuthInstance();
             console.log(authIn);
         },function(error){
             console.log("error")

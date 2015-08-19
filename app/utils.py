@@ -5,7 +5,11 @@ import random
 import string
 from models import User
 from database import db_session
+from flask_login import LoginManager
 from . import app
+
+login_manager = LoginManager()
+
 
 def check_permissions(course_id,user_id):
     user = db_session.query(User).get(user_id)
@@ -20,20 +24,21 @@ def check_permissions(course_id,user_id):
 def state_gen():
     return ''.join(random.choice(string.ascii_uppercase+string.digits) for i in range(32))
 
-def create_user(session):
-    assert db_session.query(User).filter_by(email=session['email']).first() == None
+def create_user(email):
+    assert db_session.query(User).filter_by(email=email).first() == None
     user = User()
-    user.email = session['email']
+    user.email = email
     if user.email == app.config['ADMIN_EMAIL']:
         user.type="admin"
     else:
         user.type = "student"
     db_session.add(user)
     db_session.commit()
-    user = db_session.query(User).filter_by(email=session['email']).one()
-    return user.id
+    user = db_session.query(User).filter_by(email=email).one()
+    return user
 
-def get_user_info(user_id):
+@login_manager.user_loader
+def load_user(user_id):
     user = db_session.query(User).get(user_id)
     return user
 

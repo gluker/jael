@@ -8,10 +8,12 @@ from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
-from utils import bb_to_html, check_input, state_gen, create_user, get_user_info, get_user_id, check_permissions
+from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials
 from flask_oauth import OAuth
+from flask_login import login_user, login_required, current_user, logout_user
+
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
 
@@ -21,6 +23,8 @@ CLIENT_SECRET = json.loads(
     open(PATH_TO_CLIENT_SECRET, 'r').read())['web']['client_secret']
 APPLICATION_NAME = "Jaot"
 
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 oauth = OAuth()
     
@@ -33,15 +37,6 @@ facebook = oauth.remote_app('facebook',
     consumer_secret = app.config['FB_APP_SECRET'],
     request_token_params = {'scope':'email'}
     )
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "email" not in session:
-            flash("Need to log in first")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @facebook.tokengetter
 def get_facebook_token(token=None):
@@ -65,19 +60,20 @@ def loginHandler(resp):
         "&access_token="+app_token)
     session["facebook_id"] = json.loads(r.text)["data"]["user_id"]
     r = requests.get(facebook.base_url+session['facebook_id']+"?access_token="+session['facebook_token']+"&fields=email,name")
-    session['username'] = json.loads(r.text)["name"]
-    session['email'] = json.loads(r.text)["email"]
+    email = json.loads(r.text)["email"]
 
     try:
-        session['user_id'] = get_user_id(session['email'])
-        flash("Logged in as "+session['email'])
+        user_id = get_user_id(email)
+        user = load_user(user_id)
+        login_user(user)
+        flash("Logged in as "+current_user.email)
     except Exception as e:
         print "can't get user"
         print e
         try:
             user = create_user(session)
-            session['user_id'] = user
-            flash("Wellcome, "+session['username'])
+            login_user(user)
+            flash("Wellcome")
         except Exception as e:
             print "can't create"
             print e
@@ -95,8 +91,7 @@ def showAllCourses():
 @app.route('/logout/')
 @login_required
 def logout():
-    for attr in ['user_id','email','username']:
-        del session[attr]
+    logout_user()
     flash("Logged out")
     return redirect(url_for('login'))
 
