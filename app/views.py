@@ -424,7 +424,7 @@ def editProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
         abort(404)
     form = ProblemForm(request.form,problem)
     print form.data
@@ -444,7 +444,7 @@ def deleteProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
         abort(404)
     if request.method == "POST":
         db_session.delete(problem)
