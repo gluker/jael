@@ -28,6 +28,9 @@
         <div id="messages">
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
+        {% if next_problem %}
+        <a class="btn btn-default" href="{{url_for('showProblem',course_id=course.id, pset_id=pset.id,problem_id=next_problem)}}">Next</a>
+        {% endif %}
     </form>
 <script src="{{url_for('static', filename='js/checkproblem.js')}}"></script>
 
