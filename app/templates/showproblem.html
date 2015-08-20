@@ -13,11 +13,13 @@
 {% endblock %}
 {% block content %}
     <h1> Problem #{{problem.id}} </h1>
+    {% if current_user.type == "admin" %}
     <a href="{{url_for('editProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" 
         class="btn btn-warning btn-xs">Edit</a>
     <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}"
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
+    {% endif %}
     <form action="{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" method="GET" >
         <div class="panel panel-default" id="panel">
             <div class="panel-body">
