@@ -3,7 +3,7 @@ import json
 import httplib2
 import requests
 from sympy import sympify, limit, oo, symbols
-from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort
+from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
@@ -13,7 +13,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError, OAuth2Credentials
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
-from flask_principal import Principal, Permission, RoleNeed
+from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed
 
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
@@ -27,6 +27,8 @@ APPLICATION_NAME = "Jaot"
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+principals = Principal(app)
+admin_permission = Permission(RoleNeed('admin'))
 oauth = OAuth()
     
 facebook = oauth.remote_app('facebook',
@@ -45,7 +47,7 @@ def get_facebook_token(token=None):
 
 @app.route("/fblogin")
 def fblogin():
-    return facebook.authorize(callback = 'http://localhost:5000/login_handler/')
+    return facebook.authorize(callback = app.config['APP_DOMAIN']+'login_handler/')
 
 @app.route("/login_handler/")
 @facebook.authorized_handler
@@ -78,21 +80,24 @@ def loginHandler(resp):
         except Exception as e:
             print "can't create"
             print e
+            abort(403)
+    identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
     return redirect(url_for('showAllCourses'))
     
-
-
 @app.route('/')
 @app.route('/courses/')
 @login_required
 def showAllCourses():
-    courses = db_session.query(Course).all()
+    
+    courses = current_user.courses
     return render_template("showallcourses.html",courses=courses)
     
 @app.route('/logout/')
 @login_required
 def logout():
     logout_user()
+    for key in ('identity.name', 'identity.auth_type'):
+        session.pop(key, None)
     flash("Logged out")
     return redirect(url_for('login'))
 
@@ -226,14 +231,18 @@ def gdisconnect():
         
 @app.route('/users/')
 @login_required
+@admin_permission.require(http_exception=403)
 def showUsers():
     users = db_session.query(User).all()
     courses = db_session.query(Course).all()
     return render_template("showusers.html", users=users,courses=courses)
 
 @app.route('/users/<int:user_id>/delete/', methods=['POST','GET'])
+@admin_permission.require(http_exception=403)
 def deleteUser(user_id):
     user = db_session.query(User).get(user_id)
+    if user == None:
+        abort(404)
     if request.method == "POST":
         db_session.delete(user)
         db_session.commit()
@@ -242,6 +251,7 @@ def deleteUser(user_id):
     return render_template('deleteuser.html')
 
 @app.route('/users/<int:user_id>/edit/', methods=['POST','GET'])
+@admin_permission.require(http_exception=403)
 def editUser(user_id):
     user = db_session.query(User).get(user_id)
     if user == None:
@@ -256,9 +266,11 @@ def editUser(user_id):
                 course = db_session.query(Course).get(int(field))
                 user.courses.append(course)
         db_session.commit()
+        return redirect(url_for("showUsers"))
     return render_template("edituser.html",user=user,courses=courses, form=form)
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
+@admin_permission.require(http_exception=403)
 def newCourse():
     form = CourseForm(request.form)
     if request.method == "POST" and form.validate():
@@ -280,6 +292,8 @@ def showCourse(course_id):
     return render_template("showcourse.html",course=course,psets=psets,perm=check_permissions(course.id,session['user_id']))
 
 @app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def editCourse(course_id):
     course = db_session.query(Course).get(course_id)
     if course == None:
@@ -291,6 +305,8 @@ def editCourse(course_id):
     return render_template("editcourse.html",course=course)
 
 @app.route('/courses/<int:course_id>/delete/', methods=['GET','POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def deleteCourse(course_id):
     course = db_session.query(Course).get(course_id)
     if course == None:
@@ -303,6 +319,8 @@ def deleteCourse(course_id):
 
 ### Views for Problem Sets ###
 @app.route('/courses/<int:course_id>/psets/new/', methods=['GET','POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def newPSet(course_id):
     course = db_session.query(Course).get(course_id)
     if course == None:
@@ -321,15 +339,21 @@ def newPSet(course_id):
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/')
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/')
+@login_required
 def showPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     if None in [pset,course] or pset.course_id != course_id:
         abort(404)
+    if course not in current_user.courses and current_user.type == "student":
+        abort(403)
     problems = pset.problems
-    return render_template("showpset.html",course=course,pset=pset,problems=problems)
+    perm = "view" if current_user.type != "admin" else "edit"
+    return render_template("showpset.html",course=course,pset=pset,problems=problems, perm=perm)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/edit/',methods=['POST','GET'])
+@login_required
+@admin_permission.require(http_exception=403)
 def editPSet(course_id,pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -345,6 +369,8 @@ def editPSet(course_id,pset_id):
     return render_template("editpset.html",course=course,pset=pset)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/delete/', methods=["GET",'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def deletePSet(course_id,pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
     if pset == None or pset.course_id != course_id:
@@ -357,6 +383,8 @@ def deletePSet(course_id,pset_id):
 
 ### Views for Problems ###
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/new/', methods=['GET','POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def newProblem(course_id, pset_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -373,16 +401,21 @@ def newProblem(course_id, pset_id):
     return render_template("newproblem.html",course=course,pset=pset,form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/')
+@login_required
 def showProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.pset_id != pset_id:
+    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
         abort(404)
+    if course not in current_user.courses and current_user.type == "student":
+        abort(403)
     text = bb_to_html(problem.text)
     return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
+@login_required
+@admin_permission.require(http_exception=403)
 def editProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -401,6 +434,8 @@ def editProblem(course_id,pset_id,problem_id):
     return render_template("editproblem.html",course=course,pset=pset,problem=problem,form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/', methods=["GET","POST"])
+@login_required
+@admin_permission.require(http_exception=403)
 def deleteProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
@@ -415,6 +450,7 @@ def deleteProblem(course_id,pset_id,problem_id):
 
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST"])
+@login_required
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
     messages = []
@@ -449,4 +485,19 @@ def checkProblem(course_id,pset_id,problem_id):
 
 @app.errorhandler(404)
 def error404(e):
-    return render_template('errors/404.html')
+    return render_template('errors/404.html',e=e)
+@app.errorhandler(403)
+def error404(e):
+    return render_template('errors/404.html',e=e)
+
+
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+    identity.user = current_user
+    if hasattr(current_user, 'id'):
+        identity.provides.add(UserNeed(current_user.id))
+
+    # Assuming the User model has a list of roles, update the
+    # identity with the roles that the user provides
+    identity.provides.add(RoleNeed(current_user.type))
+

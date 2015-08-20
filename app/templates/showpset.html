@@ -4,7 +4,6 @@
         <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
         <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
         <li class="active">{{pset.title}}</li>
-        {{ logout() }}
     </ol>
 {% endblock %}
 {% block content %}

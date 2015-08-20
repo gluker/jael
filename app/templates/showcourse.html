@@ -4,7 +4,6 @@
     <ol class="breadcrumb">
         <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
         <li class="active">{{course.name}}</li>
-        {{ logout() }}
     </ol>
 {% endblock %}
 {% block content %}
@@ -12,7 +11,7 @@
         <h1>{{course.name}}</h1>
     </div>
     <br>
-    {% if prem == "edit" %}
+    {% if perm == "edit" %}
         <a href="{{url_for('editCourse',course_id=course.id)}}" class="btn btn-warning btn-xs">Edit Course</a>
         <a href="{{url_for('deleteCourse',course_id=course.id)}}" class="btn btn-danger btn-xs">Delete Course</a><br>
     {% endif %}
@@ -24,7 +23,7 @@
             </a>
         {% endfor %}
     </div>
-    {% if prem == "edit" %}
+    {% if perm == "edit" %}
         <a href="{{url_for('newPSet',course_id=course.id)}}" class="btn btn-warning">Create new pset</a>
     {% endif %}
 {% endblock %}

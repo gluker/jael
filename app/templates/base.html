@@ -22,7 +22,12 @@
     </head>
     <body>
         <header class="container">
-            {{current_user.email}}, {{current_user.type}}
+            {% if current_user.is_authenticated() %}
+                <span class="pull-right">
+                    {{current_user.email}}, {{current_user.type}}
+                    <a class="btn btn-default btn-xs" href="{{url_for('logout')}}">Logout</a>
+                </span>
+            {% endif %}
             {% with messages = get_flashed_messages() %}
                {% if messages %}
                  <div class="flashes">
