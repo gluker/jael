@@ -88,8 +88,10 @@ def loginHandler(resp):
 @app.route('/courses/')
 @login_required
 def showAllCourses():
-    
-    courses = current_user.courses
+    if current_user.type == "admin":
+        courses = db_session.query(Course).all()
+    else:
+        courses = current_user.courses
     return render_template("showallcourses.html",courses=courses)
     
 @app.route('/logout/')

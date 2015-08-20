@@ -3,7 +3,9 @@
 
 {% block content %}
     <h1>List of all Courses</h1><br>
-    <a href="{{url_for('newCourse')}}">Create a new course</a><br>
+    {% if current_user.type == "admin" %}
+    <a href="{{url_for('newCourse')}}" class="btn btn-default">Create a new course</a><br>
+    {% endif %}
     <div class="list-group">
     {% for course in courses %}
             <a  href="{{url_for('showCourse',course_id=course.id)}}" class="list-group-item">{{course.name}}</a>
