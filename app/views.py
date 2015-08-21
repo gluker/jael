@@ -381,7 +381,7 @@ def deleteProblem(course_id,pset_id,problem_id):
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
     messages = []
-    total = len(request.form)
+    total = len(problem.requirements)
     correct = 0.0
     for req in problem.requirements:
         cond = req.condition
@@ -407,7 +407,7 @@ def checkProblem(course_id,pset_id,problem_id):
             return jsonify(errors = ["Please check the input!"])
         except Exception as e:
             return jsonify(errors = ["Please check the input!"])
-    return jsonify(messages = messages, rate = int((correct/total)*100))
+    return jsonify(messages = messages, rate = int((correct/total)*100) if total != 0 else 100)
 
 @app.errorhandler(404)
 def error404(e):
