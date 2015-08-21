@@ -3,80 +3,15 @@
 {{ super() }}
 <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 <script src="https://apis.google.com/js/api:client.js"></script>
-<script>
-$(function(){
-    gapi.load('auth2', function(){
-      // Retrieve the singleton for the GoogleAuth library and set up the client.
-      auth2 = gapi.auth2.init({
-        client_id: '414913450662-3c95nmb38hdit3lhqinqjbq7lpp5h4r1.apps.googleusercontent.com',
-        cookiepolicy: 'single_host_origin',
-        // Request scopes in addition to 'profile' and 'email'
-        //scope: 'additional_scope'
-      });
-    var gbutton = document.getElementById('gbutton');
-    auth2.attachClickHandler(gbutton,{},function(user){
-            console.log(authIn);
-        },function(error){
-            console.log("error")
-        });
-    
-    });
-});
-</script>
 {% endblock %}
 
 {% block content %}
-{#
-    <div id="signinButton">
-        <span class="g-signin"
-            data-scope="openid email"
-            data-clientid="414913450662-3c95nmb38hdit3lhqinqjbq7lpp5h4r1.apps.googleusercontent.com"
-            data-redirecturi="postmessage"
-            data-accesstype="offline"
-            data-cookiepolicy="single_host_origin"
-            data-callback="signInCallback"
-            data-approvalprompt="force">
-        </span>
-    </div>
-    <div id="result"></div>
-#}
-
-
     <div class="login-form">
         <a class="btn btn-block btn-social btn-facebook" href="{{url_for('fblogin')}}">
             <i class="fa fa-facebook"></i> Sign in with Facebook
         </a>
-        <a class="btn btn-block btn-social btn-google" id="gbutton">
+        <a class="btn btn-block btn-social btn-google" href="{{url_for('glogin')}}">
             <i class="fa fa-google"></i> Sign in with Google
         </a>
     </div>
-
-    <script>
-    function signInCallback(authResult){
-        if (authResult['code']){
-
-            $.ajax({
-                type: "POST",
-                url: '/gconnect?state={{STATE}}',
-                processData: false,
-                contentType: 'application/octet-stream; charset=utf-8;',
-                data: authResult['code'],
-                success: function(result){
-                    if (result) {
-                        $('#result').html('Login Successful!</br>Redirecting...')
-                        setTimeout(function(){
-                            window.location.href="/";
-                        }, 3000);
-                    }else if(authResult['error']) {
-                        console.log('There was an error: '+ authResult['error']);
-                    }else {
-                        $('#result').html('Failed to make a server-side call.');
-                    }
-                }
-            });
-        }
-    }
-
-    
-    </script>
 {% endblock %}

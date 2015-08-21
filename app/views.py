@@ -1,16 +1,12 @@
-from functools import wraps
 import json
-import httplib2
 import requests
-from sympy import sympify, limit, oo, symbols
+from sympy import sympify, limit, oo, symbols, pi
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
 from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError, OAuth2Credentials
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
 from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed
@@ -40,6 +36,55 @@ facebook = oauth.remote_app('facebook',
     consumer_secret = app.config['FB_APP_SECRET'],
     request_token_params = {'scope':'email'}
     )
+google = oauth.remote_app('google',
+    base_url='https://www.google.com/accounts/',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    request_token_url=None,
+    request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
+                          'response_type': 'code'},
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_method='POST',
+    access_token_params={'grant_type': 'authorization_code'},
+    consumer_key=CLIENT_ID,
+    consumer_secret=CLIENT_SECRET)
+
+@app.route('/glogin/')
+def glogin():
+    return google.authorize(callback = app.config['APP_DOMAIN']+'glogin_handler/')
+
+@google.tokengetter
+def get_google_token(token=None):
+    return session.get('google_token')
+
+@app.route("/glogin_handler/")
+@google.authorized_handler
+def gloginHandler(resp):
+    session['google_token'] = resp['access_token']
+    headers = {"Authorization":"Bearer "+session['google_token']}
+    r = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',headers=headers)
+    try:
+        email = json.loads(r.text)["email"]
+    except:
+        abort(401)
+
+    try:
+        user_id = get_user_id(email)
+        user = load_user(user_id)
+        login_user(user)
+        flash("Logged in as "+current_user.email)
+    except Exception as e:
+        print "can't get user"
+        print e
+        try:
+            user = create_user(email)
+            login_user(user)
+            flash("Wellcome")
+        except Exception as e:
+            print "can't create"
+            print e
+            abort(403)
+    identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
+    return redirect(url_for('showAllCourses'))
 
 @facebook.tokengetter
 def get_facebook_token(token=None):
@@ -108,129 +153,8 @@ def login():
     if current_user.is_authenticated():
         flash("Already logged in")
         return redirect(url_for("showAllCourses"))
-    state = state_gen()
-    session['state'] = state
-    return render_template("login.html", STATE=state)
+    return render_template("login.html")
     
-@app.route('/gconnect', methods=['POST'])
-def gconnect():
-    # Validate state token
-    if request.args.get('state') != session['state']:
-        response = make_response(json.dumps('Invalid state parameter.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    # Obtain authorization code
-    code = request.data
-    try:
-        oauth_flow = flow_from_clientsecrets(PATH_TO_CLIENT_SECRET, scope='')
-        oauth_flow.redirect_uri = 'postmessage'
-        credentials = oauth_flow.step2_exchange(code)
-    except FlowExchangeError:
-        response = make_response(
-            json.dumps('Failed to upgrade the authorization code.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-        
-    # Check that the access token is valid.
-    access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
-           % access_token)
-    h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
-    # If there was an error in the access token info, abort.
-    if result.get('error') is not None:
-        response = make_response(json.dumps(result.get('error')), 500)
-        response.headers['Content-Type'] = 'application/json'
-
-    # Verify that the access token is used for the intended user.
-    gplus_id = credentials.id_token['sub']
-    if result['user_id'] != gplus_id:
-        response = make_response(
-            json.dumps("Token's user ID doesn't match given user ID."), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-        
-    # Verify that the access token is valid for this app.
-    if result['issued_to'] != CLIENT_ID:
-        response = make_response(
-            json.dumps("Token's client ID does not match app's."), 401)
-        print "Token's client ID does not match app's."
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    
-    stored_credentials = session.get('credentials')
-    stored_gplus_id = session.get('gplus_id')
-    if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    # Store the access token in the session for later use.
-    session['credentials'] = credentials.to_json()
-    session['gplus_id'] = gplus_id
-
-    # Get user info
-    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt': 'json'}
-    answer = requests.get(userinfo_url, params=params)
-
-    data = answer.json()
-
-    session['username'] = data['name']
-    session['picture'] = data['picture']
-    session['email'] = data['email']
-
-    try:
-        session['user_id'] = get_user_id(session['email'])
-        flash("Logged in as "+session['email'])
-    except Exception as e:
-        print "can't get user"
-        print e
-        try:
-            user = create_user(session)
-            session['user_id'] = user
-            flash("Wellcome, "+session['username'])
-        except Exception as e:
-            print "can't create"
-            flash("Sum Tin Wong")
-            print e
-    flash("Logged in as "+session["email"])
-    return redirect(url_for('showAllCourses'))
-   
-    
-@app.route('/gdisconnect')
-def gdisconnect():
-        # Only disconnect a connected user.
-    credentials = OAuth2Credentials.from_json(session.get('credentials'))
-    if credentials is None:
-        response = make_response(
-            json.dumps('Current user not connected.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    access_token = credentials.access_token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
-    h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
-
-    if result['status'] == '200':
-        # Reset the user's sesson.
-        del session['credentials']
-        del session['gplus_id']
-        del session['username']
-        del session['email']
-        del session['picture']
-
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
-        # For whatever reason, the given token was invalid.
-        response = make_response(
-            json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
-        
 @app.route('/users/')
 @login_required
 @admin_permission.require(http_exception=403)
@@ -452,7 +376,6 @@ def deleteProblem(course_id,pset_id,problem_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("deleteproblem.html",course=course,pset=pset,problem=problem)
 
-
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST"])
 @login_required
 def checkProblem(course_id,pset_id,problem_id):
@@ -484,7 +407,6 @@ def checkProblem(course_id,pset_id,problem_id):
             return jsonify(errors = ["Please check the input!"])
         except Exception as e:
             return jsonify(errors = ["Please check the input!"])
-
     return jsonify(messages = messages, rate = int((correct/total)*100))
 
 @app.errorhandler(404)
@@ -494,14 +416,9 @@ def error404(e):
 def error404(e):
     return render_template('errors/404.html',e=e)
 
-
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity):
     identity.user = current_user
     if hasattr(current_user, 'id'):
         identity.provides.add(UserNeed(current_user.id))
-
-    # Assuming the User model has a list of roles, update the
-    # identity with the roles that the user provides
     identity.provides.add(RoleNeed(current_user.type))
-
