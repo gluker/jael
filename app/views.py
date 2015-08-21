@@ -4,7 +4,7 @@ from sympy import sympify, limit, oo, symbols, pi
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
-from models import Course, ProblemSet, Problem, Requirement, User
+from models import Course, ProblemSet, Problem, Requirement, User, UserProblem
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
 from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
 from flask_oauth import OAuth
@@ -332,6 +332,11 @@ def showProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
+    rate = 0
+    for up in current_user.problems:
+        if up.problem == problem:
+            rate = up.rate
+            break
     if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
         abort(404)
     if course not in current_user.courses and current_user.type == "student":
@@ -339,7 +344,7 @@ def showProblem(course_id,pset_id,problem_id):
     text = bb_to_html(problem.text)
     next_problem = problem_id+1 if len(pset.problems)>problem_id else None
         
-    return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text,next_problem = next_problem)
+    return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text,next_problem = next_problem, rate=rate)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
 @login_required
@@ -407,7 +412,19 @@ def checkProblem(course_id,pset_id,problem_id):
             return jsonify(errors = ["Please check the input!"])
         except Exception as e:
             return jsonify(errors = ["Please check the input!"])
-    return jsonify(messages = messages, rate = int((correct/total)*100) if total != 0 else 100)
+    rate = int((correct/total)*100) if total != 0 else 100
+    need_new = True
+    for up in current_user.problems:
+        if up.problem == problem:
+            up.rate = rate
+            need_new = False
+            break
+    if need_new:
+        uproblem = UserProblem(rate=rate)
+        uproblem.problem = problem
+        current_user.problems.append(uproblem)
+    db_session.commit()
+    return jsonify(messages = messages,rate = rate)
 
 @app.errorhandler(404)
 def error404(e):
