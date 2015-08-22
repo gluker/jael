@@ -18,7 +18,9 @@
     <div class="list-group">
     {% for problem in problems %}
         <a class="list-group-item"
-        href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}</a>
+        href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}
+        <span class="pull-right">{{rates[problem.id]}}</span>
+        </a>
     {% endfor %}
     </div>
     {% if perm == "edit" %}

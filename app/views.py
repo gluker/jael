@@ -78,7 +78,7 @@ def gloginHandler(resp):
         try:
             user = create_user(email)
             login_user(user)
-            flash("Wellcome")
+            flash("Welcome")
         except Exception as e:
             print "can't create"
             print e
@@ -273,9 +273,13 @@ def showPSet(course_id,pset_id):
         abort(404)
     if course not in current_user.courses and current_user.type == "student":
         abort(403)
+    rates = {}
     problems = pset.problems
+    for up in current_user.problems:
+        if up.problem in problems:
+            rates[up.problem_id]=up.rate
     perm = "view" if current_user.type != "admin" else "edit"
-    return render_template("showpset.html",course=course,pset=pset,problems=problems, perm=perm)
+    return render_template("showpset.html",course=course,pset=pset,problems=problems, perm=perm, rates=rates)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/edit/',methods=['POST','GET'])
 @login_required
