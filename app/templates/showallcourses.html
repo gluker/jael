@@ -2,7 +2,7 @@
 {% block title %}List of all courses{% endblock %}
 
 {% block content %}
-    <h1>List of all Courses</h1><br>
+    <h1>List of all available Courses</h1><br>
     <div class="list-group">
     {% for course in courses %}
             <a  href="{{url_for('showCourse',course_id=course.id)}}" class="list-group-item">{{course.name}}</a>
