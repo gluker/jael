@@ -1,3 +1,5 @@
+from collections import namedtuple
+from functools import partial
 import json
 import requests
 from sympy import sympify, limit, oo, symbols, pi
@@ -48,25 +50,7 @@ google = oauth.remote_app('google',
     consumer_key=CLIENT_ID,
     consumer_secret=CLIENT_SECRET)
 
-@app.route('/glogin/')
-def glogin():
-    return google.authorize(callback = app.config['APP_DOMAIN']+'glogin_handler/')
-
-@google.tokengetter
-def get_google_token(token=None):
-    return session.get('google_token')
-
-@app.route("/glogin_handler/")
-@google.authorized_handler
-def gloginHandler(resp):
-    session['google_token'] = resp['access_token']
-    headers = {"Authorization":"Bearer "+session['google_token']}
-    r = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',headers=headers)
-    try:
-        email = json.loads(r.text)["email"]
-    except:
-        abort(401)
-
+def user_login(email):
     try:
         user_id = get_user_id(email)
         user = load_user(user_id)
@@ -84,6 +68,26 @@ def gloginHandler(resp):
             print e
             abort(403)
     identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
+
+@app.route('/glogin/')
+def glogin():
+    return google.authorize(callback = app.config['APP_DOMAIN']+'glogin_handler/')
+
+@google.tokengetter
+def get_google_token(token=None):
+    return session.get('google_token')
+
+@app.route("/glogin_handler/")
+@google.authorized_handler
+def gloginHandler(resp):
+    session['google_token'] = resp['access_token']
+    headers = {"Authorization":"Bearer "+session['google_token']}
+    r = requests.get('https://www.googleapis.com/oauth2/v1/userinfo',headers=headers)
+    try:
+        email = json.loads(r.text)["email"]
+        user_login(email)
+    except:
+        abort(401)
     return redirect(url_for('showAllCourses'))
 
 @facebook.tokengetter
@@ -108,25 +112,11 @@ def loginHandler(resp):
         "&access_token="+app_token)
     session["facebook_id"] = json.loads(r.text)["data"]["user_id"]
     r = requests.get(facebook.base_url+session['facebook_id']+"?access_token="+session['facebook_token']+"&fields=email,name")
-    email = json.loads(r.text)["email"]
-
     try:
-        user_id = get_user_id(email)
-        user = load_user(user_id)
-        login_user(user)
-        flash("Logged in as "+current_user.email)
-    except Exception as e:
-        print "can't get user"
-        print e
-        try:
-            user = create_user(email)
-            login_user(user)
-            flash("Wellcome")
-        except Exception as e:
-            print "can't create"
-            print e
-            abort(403)
-    identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
+        email = json.loads(r.text)["email"]
+        user_login(email)
+    except:
+        abort(401)
     return redirect(url_for('showAllCourses'))
     
 @app.route('/')
@@ -436,7 +426,8 @@ def error404(e):
 @app.errorhandler(403)
 def error404(e):
     return render_template('errors/404.html',e=e)
-
+@app.errorhandler(500)
+    
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity):
     identity.user = current_user
