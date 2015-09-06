@@ -66,7 +66,8 @@ def user_login(email):
         except Exception as e:
             print "can't create"
             print e
-            abort(403)
+            db_session.rollback()
+            abort(401)
     identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
 
 @app.route('/glogin/')
