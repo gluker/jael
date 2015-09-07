@@ -14,6 +14,14 @@ class Course(Base):
     name = Column(String(250), nullable=False)
     problemsets = relationship("ProblemSet",backref="course")
 
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'name':         self.name
+    #        'problemsets':  [ps.serialize() for ps in self.problemsets]
+            }
+            
 class ProblemSet(Base):
     __tablename__ = 'problemset'
     id = Column(Integer, primary_key=True)
@@ -22,6 +30,16 @@ class ProblemSet(Base):
     due = Column(Date)
     course_id = Column(Integer, ForeignKey("course.id"))
     problems = relationship("Problem",backref="problemset")
+    
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'title':        self.title,
+            'opens':        self.opens,
+            'due':          self.due,
+            'problems':     [p.serialize() for p in self.problems]
+            }
 
 class Problem(Base):
     __tablename__ = 'problem'
@@ -30,13 +48,30 @@ class Problem(Base):
     trials = Column(Integer)
     problemset_id = Column(Integer, ForeignKey("problemset.id"))
     requirements = relationship("Requirement",backref="problem")
-
+    
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'text':         self.text,
+            'trials':       self.trials,
+            'requirements': [req.serialize() for req in self.requirements]
+            }
+            
 class Requirement(Base):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)
     condition = Column(String(250), nullable=False)
     comment = Column(String(250))
     problem_id = Column(Integer, ForeignKey("problem.id"))
+    
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'condition':    self.condition,
+            'comment':      self.comment
+            }
 
 class User(Base, UserMixin):
     __tablename__ = 'user'

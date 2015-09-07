@@ -208,6 +208,13 @@ def showCourse(course_id):
     psets = course.problemsets
     return render_template("showcourse.html",course=course,psets=psets,perm=check_permissions(course.id,session['user_id']))
 
+@app.route('/courses/<int:course_id>/JSON')
+@login_required
+@admin_permission.require(http_exception=403)
+def JSONCourse(course_id):
+    course = db_session.query(Course).get(course_id)
+    return jsonify(course.serialize())
+    
 @app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
