@@ -213,7 +213,7 @@ def showCourse(course_id):
 @admin_permission.require(http_exception=403)
 def JSONCourse(course_id):
     course = db_session.query(Course).get(course_id)
-    return jsonify(course.serialize())
+    return jsonify(course.serialize)
     
 @app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
 @login_required

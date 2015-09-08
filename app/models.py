@@ -18,8 +18,8 @@ class Course(Base):
     def serialize(self):
         return {
             'id':           self.id,
-            'name':         self.name
-    #        'problemsets':  [ps.serialize() for ps in self.problemsets]
+            'name':         self.name,
+            'problemsets':  [ps.serialize for ps in self.problemsets]
             }
             
 class ProblemSet(Base):
@@ -36,9 +36,9 @@ class ProblemSet(Base):
         return {
             'id':           self.id,
             'title':        self.title,
-            'opens':        self.opens,
-            'due':          self.due,
-            'problems':     [p.serialize() for p in self.problems]
+            'opens':        str(self.opens),
+            'due':          str(self.due),
+            'problems':     [p.serialize for p in self.problems]
             }
 
 class Problem(Base):
@@ -55,7 +55,7 @@ class Problem(Base):
             'id':           self.id,
             'text':         self.text,
             'trials':       self.trials,
-            'requirements': [req.serialize() for req in self.requirements]
+            'requirements': [req.serialize for req in self.requirements]
             }
             
 class Requirement(Base):
