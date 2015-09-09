@@ -141,6 +141,8 @@ def logout():
 
 @app.route('/login/')
 def login():
+    if app.config["LOGADMIN"] == True:
+        user_login(app.config["ADMIN_EMAIL"])
     if current_user.is_authenticated():
         flash("Already logged in")
         return redirect(url_for("showAllCourses"))
