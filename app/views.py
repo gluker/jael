@@ -148,6 +148,13 @@ def login():
         return redirect(url_for("showAllCourses"))
     return render_template("login.html")
     
+@app.route('/admin/')
+@login_required
+@admin_permission.require(http_exception=403)
+def adminPanel():
+    courses = db_session.query(Course).all()
+    return render_template("admin.html",courses=courses)
+
 @app.route('/users/')
 @login_required
 @admin_permission.require(http_exception=403)

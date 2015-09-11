@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Courses</h2>
+    <a href="#" class="btn btn-primary">Create</a>
+    <a href="#" class="btn btn-primary">Import from JSON</a>
+    <br>
+    <table class="table table-bordered">
+    {% for course in courses %}
+        <tr>
+            <td>
+                <strong>{{course.id}}</strong>
+            </td>
+            <td>
+                <strong>{{course.name}}</strong>
+            </td>
+            <td>
+                <a href="#" class="btn btn-warning btn-xs">Rename</a>
+                <a href="#" class="btn btn-danger btn-xs">Delete</a>
+                <a href="{{url_for('JSONCourse',course_id=course.id)}}" class="btn btn-primary btn-xs">Export to JSON</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endblock %}
