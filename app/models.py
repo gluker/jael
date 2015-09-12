@@ -89,3 +89,16 @@ class UserProblem(Base):
     rate = Column(Integer)
     problem = relationship("Problem")
 
+class Trial(Base):
+    __tablename__ = 'trial'
+    id = Column(Integer, primary_key=True)
+    rate = Column(Integer)
+    userproblem_id = Column(Integer, ForeignKey("userproblem.id"))
+    answers = relationship("Answer")
+    
+class Answer(Base):
+    __tablename__ = "answer"
+    id = Column(Integer, primary_key=True)
+    field = Column(String(50))
+    value = Column(String(50))
+    trial_id = Column(Integer, ForeignKey("trial.id"))

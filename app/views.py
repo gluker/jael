@@ -355,7 +355,8 @@ def showProblem(course_id,pset_id,problem_id):
     text = bb_to_html(problem.text)
     next_problem = problem_id+1 if len(pset.problems)>problem_id else None
         
-    return render_template("showproblem.html",course=course,pset=pset,problem=problem,text=text,next_problem = next_problem, rate=rate)
+    return render_template("showproblem.html",
+        course=course,pset=pset,problem=problem,text=text,next_problem = next_problem, rate=rate)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
 @login_required
