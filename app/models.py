@@ -90,12 +90,28 @@ class UserProblem(Base):
     trials = relationship("Trial")
     problem = relationship("Problem")
 
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'rate':         self.rate,
+            'trials':       [t.serialize for t in self.trials]
+        }
+
 class Trial(Base):
     __tablename__ = 'trial'
     id = Column(Integer, primary_key=True)
     rate = Column(Integer)
     userproblem_id = Column(Integer, ForeignKey("userproblem.id"))
     answers = relationship("Answer")
+
+    @property
+    def serialize(self):
+        return {
+            'id':           self.id,
+            'rate':         self.rate,
+            'answers':      [a.serialize for a in self.answers]
+        }
     
 class Answer(Base):
     __tablename__ = "answer"
@@ -103,3 +119,11 @@ class Answer(Base):
     field = Column(String(50))
     value = Column(String(50))
     trial_id = Column(Integer, ForeignKey("trial.id"))
+
+    @property
+    def serialize(self):
+        return {
+            'id':       self.id,
+            'field':    self.field,
+            'value':    self.value
+        }

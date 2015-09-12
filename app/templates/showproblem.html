@@ -3,6 +3,15 @@
 {{ super() }}
 <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 <script src="{{url_for('static',filename='js/lib/ASCIIMathML.js')}}"></script>
+<script>
+$(function(){
+    {% if trials %}
+    {% for answer in trials[-1].answers %}
+        $("input[name={{answer.field}}]").attr("value",{{answer.value}});
+    {% endfor %}
+    {% endif %}
+})
+</script>
 {% endblock %}
 {% block header %}
     <ol class="breadcrumb">
@@ -30,6 +39,7 @@
         <div id="messages">
         </div>
         <button type="submit" class="btn btn-primary">Check</button>
+        <button type="button" class="btn btn-primary">History</button>
         {% if next_problem %}
         <a class="btn btn-default" href="{{url_for('showProblem',course_id=course.id, pset_id=pset.id,problem_id=next_problem)}}">Next</a>
         {% endif %}

@@ -344,9 +344,11 @@ def showProblem(course_id,pset_id,problem_id):
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
     rate = 0
+    trials = None 
     for up in current_user.problems:
         if up.problem == problem:
             rate = up.rate
+            trials = up.trials
             break
     if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
         abort(404)
@@ -356,7 +358,8 @@ def showProblem(course_id,pset_id,problem_id):
     next_problem = problem_id+1 if len(pset.problems)>problem_id else None
         
     return render_template("showproblem.html",
-        course=course,pset=pset,problem=problem,text=text,next_problem = next_problem, rate=rate)
+        course=course,pset=pset,problem=problem,text=text,
+        next_problem=next_problem,rate=rate,trials=trials)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
 @login_required
