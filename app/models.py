@@ -87,6 +87,7 @@ class UserProblem(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     problem_id = Column(Integer, ForeignKey("problem.id"))
     rate = Column(Integer)
+    trials = relationship("Trial")
     problem = relationship("Problem")
 
 class Trial(Base):

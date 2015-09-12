@@ -2,7 +2,7 @@ from collections import namedtuple
 from functools import partial
 import json
 import requests
-from sympy import sympify, limit, oo, symbols, pi
+from sympy import sympify, limit, oo, symbols, pi, SympifyError
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
