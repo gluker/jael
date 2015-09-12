@@ -6,7 +6,7 @@ from sympy import sympify, limit, oo, symbols, pi
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
-from models import Course, ProblemSet, Problem, Requirement, User, UserProblem
+from models import Course, ProblemSet, Problem, Requirement, User, UserProblem, Trial, Answer
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
 from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
 from flask_oauth import OAuth
@@ -430,11 +430,17 @@ def checkProblem(course_id,pset_id,problem_id):
         if up.problem == problem:
             up.rate = rate
             need_new = False
+            uproblem = up
             break
     if need_new:
         uproblem = UserProblem(rate=rate)
         uproblem.problem = problem
         current_user.problems.append(uproblem)
+    trial = Trial()
+    trial.rate = rate
+    for key in request.form.keys():
+        trial.answers.append(Answer(field=key,value=request.form[key]))
+    uproblem.trials.append(trial)
     db_session.commit()
     return jsonify(messages = messages,rate = rate)
 
