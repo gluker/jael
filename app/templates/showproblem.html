@@ -7,7 +7,7 @@
 $(function(){
     {% if trials %}
     {% for answer in trials[-1].answers %}
-        $("input[name={{answer.field}}]").attr("value",{{answer.value}});
+        $("input[name={{answer.field}}]").attr("value",'{{answer.value}}');
     {% endfor %}
     {% endif %}
 })
