@@ -12,7 +12,7 @@ class Course(Base):
     __tablename__ = 'course'
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
-    problemsets = relationship("ProblemSet",backref="course")
+    problemsets = relationship("ProblemSet",backref="course",cascade="all,delete-orphan")
 
     @property
     def serialize(self):
@@ -29,7 +29,7 @@ class ProblemSet(Base):
     opens = Column(Date)
     due = Column(Date)
     course_id = Column(Integer, ForeignKey("course.id"))
-    problems = relationship("Problem",backref="problemset")
+    problems = relationship("Problem",backref="problemset",cascade="all,delete-orphan")
     
     @property
     def serialize(self):
@@ -47,7 +47,7 @@ class Problem(Base):
     text = Column(Text)
     trials = Column(Integer)
     problemset_id = Column(Integer, ForeignKey("problemset.id"))
-    requirements = relationship("Requirement",backref="problem")
+    requirements = relationship("Requirement",cascade="all,delete-orphan",backref="problem")
     
     @property
     def serialize(self):
@@ -79,7 +79,7 @@ class User(Base, UserMixin):
     type = Column(String(50), nullable=False)
     email = Column(String(100), nullable=False)
     courses = relationship("Course", secondary=courses_table)
-    problems = relationship("UserProblem")
+    problems = relationship("UserProblem", backref="user",cascade="all,delete-orphan")
 
 class UserProblem(Base):
     __tablename__ = 'userproblem'
@@ -88,7 +88,7 @@ class UserProblem(Base):
     problem_id = Column(Integer, ForeignKey("problem.id"))
     rate = Column(Integer)
     trials = relationship("Trial")
-    problem = relationship("Problem")
+    problem = relationship("Problem",cascade="all,delete-orphan")
 
     @property
     def serialize(self):
@@ -103,7 +103,7 @@ class Trial(Base):
     id = Column(Integer, primary_key=True)
     rate = Column(Integer)
     userproblem_id = Column(Integer, ForeignKey("userproblem.id"))
-    answers = relationship("Answer")
+    answers = relationship("Answer",cascade="all,delete-orphan")
 
     @property
     def serialize(self):
