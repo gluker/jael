@@ -87,8 +87,8 @@ class UserProblem(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     problem_id = Column(Integer, ForeignKey("problem.id"))
     rate = Column(Integer)
-    trials = relationship("Trial")
-    problem = relationship("Problem",cascade="all,delete-orphan")
+    trials = relationship("Trial",cascade="all,delete-orphan")
+    problem = relationship("Problem")
 
     @property
     def serialize(self):
