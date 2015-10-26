@@ -2,6 +2,7 @@
 {% block head %}
 {{ super() }}
 <script src="{{url_for('static', filename='js/newproblem.js')}}"></script>
+<script src="{{url_for('static', filename='js/lib/ckeditor/ckeditor.js')}}"></script>
 {% endblock %}
 {% block header %}
     <ol class="breadcrumb">
@@ -25,4 +26,7 @@
         <button type="button" class="btn btn-default" id="addRequirementBtn">Add a requirement</button>
         <button type="submit" class="btn btn-primary">{% block button %}Create{% endblock %}</button>
     </form>
+    <script>
+        CKEDITOR.replace("text");
+    </script>
 {% endblock %}
