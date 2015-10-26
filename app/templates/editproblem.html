@@ -2,13 +2,14 @@
 {% block head %}
 {{ super() }}
 <script src="{{url_for('static', filename='js/newproblem.js')}}"></script>
+<script src="{{url_for('static', filename='js/lib/ckeditor/ckeditor.js')}}"></script>
 {% endblock %}
 {% block header %}
     <ol class="breadcrumb">
         <li><a href="{{url_for('showAllCourses')}}">All Courses</a></li>
         <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
         <li><a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">{{pset.title}}</a></li>
-        <li class="active">Create problem</li>
+        <li class="active">Edit problem</li>
     </ol>
 {% endblock %}
 {% block content %}
@@ -38,4 +39,8 @@
         <button type="button" class="btn btn-default" id="addRequirementBtn">Add a requirement</button>
         <button type="submit" class="btn btn-primary">{% block button %}Edit{% endblock %}</button>
     </form>
+
+    <script>
+        CKEDITOR.replace("text");
+    </script>
 {% endblock %}
