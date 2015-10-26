@@ -22,6 +22,7 @@
         <span class="pull-right">{{rates[problem.id]}}</span>
         </a>
     {% endfor %}
+        <span class="list-group-item pull-right">Average:{{rates['avg']}}</span>
     </div>
     {% if perm == "edit" %}
     <a class="btn btn-warning" href="{{url_for('newProblem',course_id=course.id,pset_id=pset.id)}}">New Problem</a><br>
