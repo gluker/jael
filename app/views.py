@@ -11,7 +11,7 @@ from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
 from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
-from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed
+from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed,AnonymousIdentity
 
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
@@ -138,6 +138,8 @@ def logout():
         session.pop(key, None)
     flash("Logged out")
     return redirect(url_for('login'))
+    identity_changed.send(current_app._get_current_object(),
+                                  identity=Identity(user.id))
 
 @app.route('/login/')
 def login():
@@ -282,9 +284,13 @@ def showPSet(course_id,pset_id):
         abort(403)
     rates = {}
     problems = pset.problems
+    for problem in problems:
+        rates[problem.id] = 0
+    
     for up in current_user.problems:
         if up.problem in problems:
             rates[up.problem_id]=up.rate
+    rates['avg'] = sum(rates.values())/len(rates)
     perm = "view" if current_user.type != "admin" else "edit"
     return render_template("showpset.html",course=course,pset=pset,problems=problems, perm=perm, rates=rates)
 
@@ -354,7 +360,8 @@ def showProblem(course_id,pset_id,problem_id):
         abort(404)
     if course not in current_user.courses and current_user.type == "student":
         abort(403)
-    text = bb_to_html(problem.text)
+    #text = bb_to_html(problem.text)
+    text = problem.text
     next_problem = problem_id+1 if len(pset.problems)>problem_id else None
         
     return render_template("showproblem.html",
@@ -456,8 +463,7 @@ def error404(e):
 @app.errorhandler(500)
     
 @identity_loaded.connect_via(app)
-def on_identity_loaded(sender, identity):
+def on_identity_loaded(sender, identity=AnonymousIdentity()):
     identity.user = current_user
-    if hasattr(current_user, 'id'):
-        identity.provides.add(UserNeed(current_user.id))
+    identity.provides.add(UserNeed(current_user.id))
     identity.provides.add(RoleNeed(current_user.type))
