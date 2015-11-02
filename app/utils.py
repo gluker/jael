@@ -76,10 +76,9 @@ def check_input(input):
 
 def check_answer(requirement,answer):
     variables = re.findall("\{(\w+)\}",requirement)
-    print(variables)
     for v in variables:
         requirement = requirement.replace('{'+v+'}',answer[v])
-    print(requirement)
+    check_input(requirement)
     return sympify(requirement)
 
 
