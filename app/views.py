@@ -2,13 +2,12 @@ from collections import namedtuple
 from functools import partial
 import json
 import requests
-from sympy import sympify, limit, oo, symbols, pi, SympifyError
 from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
 from models import Course, ProblemSet, Problem, Requirement, User, UserProblem, Trial, Answer
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
-from utils import bb_to_html, check_input, state_gen, create_user, load_user, get_user_id, check_permissions, login_manager
+from utils import state_gen, create_user, load_user, get_user_id, check_permissions, login_manager, check_answer
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
 from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed,AnonymousIdentity
@@ -407,33 +406,19 @@ def deleteProblem(course_id,pset_id,problem_id):
 @login_required
 def checkProblem(course_id,pset_id,problem_id):
     problem = db_session.query(Problem).get(problem_id)
+    form = request.form
     messages = []
     total = len(problem.requirements)
     correct = 0.0
     for req in problem.requirements:
         cond = req.condition
-        for key in request.form.keys():
-            try:
-                check_input(request.form[key])
-                cond = cond.replace(key,request.form[key])
-            except ValueError as ext:
-                return jsonify(errors = ["Please check the input!",ext.__str__()])
-            except Exception as ext:
-                print ext
-                return jsonify(errors = ["Please check the input!"])
         try:
-            x,y = symbols('x y')
-            check_input(cond)
-            res = sympify(cond)
-            if res:
+            if check_answer(cond,form):
                 correct += 1
             else:
                 messages.append(req.comment)
-        except SympifyError as e:
-            print "Sympify exception{e}".format(e=e)
-            return jsonify(errors = ["Please check the input!"])
-        except Exception as e:
-            return jsonify(errors = ["Please check the input!"])
+        except:
+                return jsonify(errors = ["Please check the input!"])
     rate = int((correct/total)*100) if total != 0 else 100
     need_new = True
     for up in current_user.problems:
