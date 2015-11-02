@@ -7,7 +7,7 @@ from models import User
 from database import db_session
 from flask_login import LoginManager
 from . import app
-
+from sympy import sympify
 login_manager = LoginManager()
 
 def check_permissions(course_id,user_id):
@@ -73,6 +73,15 @@ def check_input(input):
             tc.generic_visit(node)
     except SyntaxError as e:
         raise e
+
+def check_answer(requirement,answer):
+    variables = re.findall("\{(\w+)\}",requirement)
+    print(variables)
+    for v in variables:
+        requirement = requirement.replace('{'+v+'}',answer[v])
+    print(requirement)
+    return sympify(requirement)
+
 
 def bb_to_html(bbtext):
     parser = bbcode.Parser()
