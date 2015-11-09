@@ -173,7 +173,7 @@ def showUsers():
 @admin_permission.require(http_exception=403)
 def deleteUser(user_id):
     user = db_session.query(User).get(user_id)
-    if user == None:
+    if user is None:
         abort(404)
     if request.method == "POST":
         db_session.delete(user)
@@ -186,7 +186,7 @@ def deleteUser(user_id):
 @admin_permission.require(http_exception=403)
 def editUser(user_id):
     user = db_session.query(User).get(user_id)
-    if user == None:
+    if user is None:
         abort(404)
     form = UserForm(request.form,user)
     courses = db_session.query(Course).all()
@@ -218,7 +218,7 @@ def newCourse():
 @login_required
 def showCourse(course_id):
     course = db_session.query(Course).get(course_id)
-    if course == None:
+    if course is None:
         abort(404)
     psets = course.problemsets
     return render_template("showcourse.html", course=course, psets=psets,
@@ -236,7 +236,7 @@ def JSONCourse(course_id):
 @admin_permission.require(http_exception=403)
 def editCourse(course_id):
     course = db_session.query(Course).get(course_id)
-    if course == None:
+    if course is None:
         abort(404)
     if request.method == "POST":
         course.name = request.form['name']
@@ -249,7 +249,7 @@ def editCourse(course_id):
 @admin_permission.require(http_exception=403)
 def deleteCourse(course_id):
     course = db_session.query(Course).get(course_id)
-    if course == None:
+    if course is None:
         abort(404)
     if request.method == "POST":
         db_session.delete(course)
@@ -263,7 +263,7 @@ def deleteCourse(course_id):
 @admin_permission.require(http_exception=403)
 def newPSet(course_id):
     course = db_session.query(Course).get(course_id)
-    if course == None:
+    if course is None:
         abort(404)
     form = ProblemSetForm(request.form)
     if request.method == "POST" and form.validate():
@@ -323,7 +323,7 @@ def editPSet(course_id,pset_id):
 @admin_permission.require(http_exception=403)
 def deletePSet(course_id,pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
-    if pset == None or pset.course_id != course_id:
+    if pset is None or pset.course_id != course_id:
         abort(404)
     if request.method == "POST":
         db_session.delete(pset)
