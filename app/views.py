@@ -2,15 +2,19 @@ from collections import namedtuple
 from functools import partial
 import json
 import requests
-from flask import render_template, request, redirect, url_for, jsonify,make_response, session, flash, abort, current_app
+from flask import render_template, request, redirect, url_for, jsonify
+from flask import make_response, session, flash, abort, current_app
 from database import db_session
 from . import app
-from models import Course, ProblemSet, Problem, Requirement, User, UserProblem, Trial, Answer
+from models import Course, ProblemSet, Problem, Requirement, User, UserProblem
+from models import Trial, Answer
 from forms import ProblemSetForm, ProblemForm, CourseForm, UserForm
-from utils import state_gen, create_user, load_user, get_user_id, check_permissions, login_manager, check_answer
+from utils import state_gen, create_user, load_user, get_user_id
+from utils import check_permissions, login_manager, check_answer
 from flask_oauth import OAuth
 from flask_login import login_user, login_required, current_user, logout_user
-from flask_principal import Principal, Permission, RoleNeed, identity_changed, identity_loaded, Identity, UserNeed,AnonymousIdentity
+from flask_principal import Principal, Permission, RoleNeed, identity_changed
+from flask_principal import identity_loaded, Identity, UserNeed,AnonymousIdentity
 
 
 PATH_TO_CLIENT_SECRET = 'instance/client_secret.json'
@@ -111,7 +115,8 @@ def loginHandler(resp):
         "?input_token="+session['facebook_token']+
         "&access_token="+app_token)
     session["facebook_id"] = json.loads(r.text)["data"]["user_id"]
-    r = requests.get(facebook.base_url+session['facebook_id']+"?access_token="+session['facebook_token']+"&fields=email,name")
+    r = requests.get(facebook.base_url+session['facebook_id']+
+        "?access_token="+session['facebook_token']+"&fields=email,name")
     try:
         email = json.loads(r.text)["email"]
         user_login(email)
@@ -136,9 +141,9 @@ def logout():
     for key in ('identity.name', 'identity.auth_type'):
         session.pop(key, None)
     flash("Logged out")
-    return redirect(url_for('login'))
     identity_changed.send(current_app._get_current_object(),
                                   identity=Identity(user.id))
+    return redirect(url_for('login'))
 
 @app.route('/login/')
 def login():
@@ -194,7 +199,7 @@ def editUser(user_id):
                 user.courses.append(course)
         db_session.commit()
         return redirect(url_for("showUsers"))
-    return render_template("edituser.html",user=user,courses=courses, form=form)
+    return render_template("edituser.html", user=user, courses=courses, form=form)
 ###  Views for courses ###
 @app.route('/courses/new/', methods=['POST','GET'])
 @admin_permission.require(http_exception=403)
@@ -216,7 +221,8 @@ def showCourse(course_id):
     if course == None:
         abort(404)
     psets = course.problemsets
-    return render_template("showcourse.html",course=course,psets=psets,perm=check_permissions(course.id,session['user_id']))
+    return render_template("showcourse.html", course=course, psets=psets,
+                perm=check_permissions(course.id,session['user_id']))
 
 @app.route('/courses/<int:course_id>/JSON')
 @login_required
@@ -235,8 +241,8 @@ def editCourse(course_id):
     if request.method == "POST":
         course.name = request.form['name']
         db_session.commit()
-        return redirect(url_for("showCourse",course_id=course.id))
-    return render_template("editcourse.html",course=course)
+        return redirect(url_for("showCourse", course_id=course.id))
+    return render_template("editcourse.html", course=course)
 
 @app.route('/courses/<int:course_id>/delete/', methods=['GET','POST'])
 @login_required
@@ -249,7 +255,7 @@ def deleteCourse(course_id):
         db_session.delete(course)
         db_session.commit()
         return redirect(url_for("showAllCourses"))
-    return render_template("deletecourse.html",course=course)
+    return render_template("deletecourse.html", course=course)
 
 ### Views for Problem Sets ###
 @app.route('/courses/<int:course_id>/psets/new/', methods=['GET','POST'])
@@ -268,8 +274,8 @@ def newPSet(course_id):
         pset.course_id=course.id
         course.problemsets.append(pset)
         db_session.commit()
-        return redirect(url_for("showCourse",course_id=course.id))
-    return render_template("newpset.html",course=course,form=form)
+        return redirect(url_for("showCourse", course_id=course.id))
+    return render_template("newpset.html", course=course, form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/')
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/')
@@ -291,7 +297,8 @@ def showPSet(course_id,pset_id):
             rates[up.problem_id]=up.rate
     rates['avg'] = sum(rates.values())/len(rates)
     perm = "view" if current_user.type != "admin" else "edit"
-    return render_template("showpset.html",course=course,pset=pset,problems=problems, perm=perm, rates=rates)
+    return render_template("showpset.html", course=course, pset=pset,
+            problems=problems, perm=perm, rates=rates)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/edit/',methods=['POST','GET'])
 @login_required
@@ -310,7 +317,8 @@ def editPSet(course_id,pset_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("editpset.html",course=course,pset=pset)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/delete/', methods=["GET",'POST'])
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/delete/', 
+                                            methods=["GET",'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def deletePSet(course_id,pset_id):
@@ -324,7 +332,8 @@ def deletePSet(course_id,pset_id):
     return render_template("deletepset.html",course=course,pset=pset)
 
 ### Views for Problems ###
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/new/', methods=['GET','POST'])
+@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/new/', 
+                                            methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def newProblem(course_id, pset_id):
@@ -337,7 +346,8 @@ def newProblem(course_id, pset_id):
         problem = Problem(text=form.text.data)
         pset.problems.append(problem)
         for req in form.requirements:
-            problem.requirements.append(Requirement(condition = req.condition.data, comment = req.comment.data))
+            problem.requirements.append(Requirement(condition = req.condition.data, 
+                                                comment = req.comment.data))
         db_session.commit()
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset,form=form)
@@ -355,7 +365,9 @@ def showProblem(course_id,pset_id,problem_id):
             rate = up.rate
             trials = up.trials
             break
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
+    if None in [pset,course,problem] or \
+                pset.course_id != course_id or \
+                problem.problemset_id != pset_id:
         abort(404)
     if course not in current_user.courses and current_user.type == "student":
         abort(403)
@@ -374,7 +386,9 @@ def editProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
+    if None in [pset,course,problem] or \
+            pset.course_id != course_id or \
+            problem.problemset_id != pset_id:
         abort(404)
     form = ProblemForm(request.form,problem)
     print form.data
@@ -382,10 +396,13 @@ def editProblem(course_id,pset_id,problem_id):
         problem.text = form.text.data
         problem.requirements = []
         for req in form.requirements:
-            problem.requirements.append(Requirement(condition = req.condition.data, comment = req.comment.data))
+            problem.requirements.append(Requirement(condition = req.condition.data,
+                                    comment = req.comment.data))
         db_session.commit()
-        return redirect(url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id))
-    return render_template("editproblem.html",course=course,pset=pset,problem=problem,form=form)
+        return redirect(url_for('showProblem', course_id=course.id,
+                            pset_id=pset.id,problem_id=problem.id))
+    return render_template("editproblem.html", course=course, pset=pset, 
+                                    problem=problem, form=form)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/', methods=["GET","POST"])
 @login_required
@@ -394,13 +411,16 @@ def deleteProblem(course_id,pset_id,problem_id):
     course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or pset.course_id != course_id or problem.problemset_id != pset_id:
+    if None in [pset,course,problem] or \
+            pset.course_id != course_id or \
+            problem.problemset_id != pset_id:
         abort(404)
     if request.method == "POST":
         db_session.delete(problem)
         db_session.commit()
-        return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
-    return render_template("deleteproblem.html",course=course,pset=pset,problem=problem)
+        return redirect(url_for('showPSet', course_id=course.id, pset_id=pset.id))
+    return render_template("deleteproblem.html", course=course, pset=pset,
+                            problem=problem)
 
 @app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST"])
 @login_required
