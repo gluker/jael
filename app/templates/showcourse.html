@@ -18,7 +18,7 @@
     <br><br>
     <div class="list-group">
         {% for pset in psets %}
-            <a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}" class="list-group-item">
+            <a href="{{url_for('showPSet',pset_id=pset.id)}}" class="list-group-item">
                 {{pset.title}}
             </a>
         {% endfor %}

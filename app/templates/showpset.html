@@ -11,20 +11,20 @@
         <h1>{{pset.title}}</h1>
     </div>
     {% if perm == "edit" %}
-    <a class="btn btn-warning btn-xs" href="{{url_for('editPSet',course_id=course.id,pset_id=pset.id)}}">Edit</a>
-    <a class="btn btn-warning btn-xs" href="{{url_for('deletePSet',course_id=course.id,pset_id=pset.id)}}">Delete</a><br>
+    <a class="btn btn-warning btn-xs" href="{{url_for('editPSet',pset_id=pset.id)}}">Edit</a>
+    <a class="btn btn-warning btn-xs" href="{{url_for('deletePSet',pset_id=pset.id)}}">Delete</a><br>
     {% endif %}
     <br>
     <div class="list-group">
     {% for problem in problems %}
         <a class="list-group-item"
-        href="{{url_for('showProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}">{{problem.id}}
+        href="{{url_for('showProblem',problem_id=problem.id)}}">{{problem.id}}
         <span class="pull-right">{{rates[problem.id]}}</span>
         </a>
     {% endfor %}
         <span class="list-group-item pull-right">Average:{{rates['avg']}}</span>
     </div>
     {% if perm == "edit" %}
-    <a class="btn btn-warning" href="{{url_for('newProblem',course_id=course.id,pset_id=pset.id)}}">New Problem</a><br>
+    <a class="btn btn-warning" href="{{url_for('newProblem',pset_id=pset.id)}}">New Problem</a><br>
     {% endif %}
 {% endblock %}

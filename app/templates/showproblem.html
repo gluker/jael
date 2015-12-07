@@ -16,20 +16,20 @@ $(function(){
 {% block header %}
     <ol class="breadcrumb">
         <li><a href="{{url_for('showCourse',course_id=course.id)}}">{{course.name}}</a></li>
-        <li><a href="{{url_for('showPSet',course_id=course.id,pset_id=pset.id)}}">{{pset.title}}</a></li>
+        <li><a href="{{url_for('showPSet',pset_id=pset.id)}}">{{pset.title}}</a></li>
         <li class="active">{{problem.id}}</li>
     </ol>
 {% endblock %}
 {% block content %}
     <h1> Problem #{{problem.id}} </h1>
     {% if current_user.type == "admin" %}
-    <a href="{{url_for('editProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" 
+    <a href="{{url_for('editProblem',problem_id=problem.id)}}" 
         class="btn btn-warning btn-xs">Edit</a>
-    <a href="{{url_for('deleteProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}"
+    <a href="{{url_for('deleteProblem',problem_id=problem.id)}}"
         class="btn btn-warning btn-xs">Delete</a><br>
     <br>
     {% endif %}
-    <form action="{{url_for('checkProblem',course_id=course.id,pset_id=pset.id,problem_id=problem.id)}}" method="GET" >
+    <form action="{{url_for('checkProblem',problem_id=problem.id)}}" method="GET" >
         <div class="panel panel-default" id="panel">
             <div class="panel-body">
             {{text|safe}}
@@ -41,7 +41,7 @@ $(function(){
         <button type="submit" class="btn btn-primary">Check</button>
         <button type="button" class="btn btn-primary">History</button>
         {% if next_problem %}
-        <a class="btn btn-default" href="{{url_for('showProblem',course_id=course.id, pset_id=pset.id,problem_id=next_problem)}}">Next</a>
+        <a class="btn btn-default" href="{{url_for('showProblem',problem_id=next_problem)}}">Next</a>
         {% endif %}
     </form>
 <script src="{{url_for('static', filename='js/checkproblem.js')}}"></script>
