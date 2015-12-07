@@ -213,8 +213,7 @@ def newCourse():
         return redirect(url_for('showAllCourses'))
     return render_template("newcourse.html",form=form)
 
-@app.route('/courses/<int:course_id>/')
-@app.route('/courses/<int:course_id>/psets/')
+@app.route('/course/<int:course_id>/')
 @login_required
 def showCourse(course_id):
     course = db_session.query(Course).get(course_id)
@@ -224,14 +223,14 @@ def showCourse(course_id):
     return render_template("showcourse.html", course=course, psets=psets,
                 perm=check_permissions(course.id,session['user_id']))
 
-@app.route('/courses/<int:course_id>/JSON')
+@app.route('/course/<int:course_id>/JSON')
 @login_required
 @admin_permission.require(http_exception=403)
 def JSONCourse(course_id):
     course = db_session.query(Course).get(course_id)
     return jsonify(course.serialize)
     
-@app.route('/courses/<int:course_id>/edit', methods=['GET','POST'])
+@app.route('/course/<int:course_id>/edit', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def editCourse(course_id):
@@ -244,7 +243,7 @@ def editCourse(course_id):
         return redirect(url_for("showCourse", course_id=course.id))
     return render_template("editcourse.html", course=course)
 
-@app.route('/courses/<int:course_id>/delete/', methods=['GET','POST'])
+@app.route('/course/<int:course_id>/delete/', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def deleteCourse(course_id):
@@ -258,7 +257,7 @@ def deleteCourse(course_id):
     return render_template("deletecourse.html", course=course)
 
 ### Views for Problem Sets ###
-@app.route('/courses/<int:course_id>/psets/new/', methods=['GET','POST'])
+@app.route('/course/<int:course_id>/add/', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def newPSet(course_id):
@@ -277,13 +276,12 @@ def newPSet(course_id):
         return redirect(url_for("showCourse", course_id=course.id))
     return render_template("newpset.html", course=course, form=form)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/')
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/')
+@app.route('/pset/<int:pset_id>/')
 @login_required
-def showPSet(course_id,pset_id):
-    course = db_session.query(Course).get(course_id)
+def showPSet(pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
-    if None in [pset,course] or pset.course_id != course_id:
+    course = db_session.query(Course).get(pset.course_id)
+    if None in [pset,course]:
         abort(404)
     if course not in current_user.courses and current_user.type == "student":
         abort(403)
@@ -300,13 +298,13 @@ def showPSet(course_id,pset_id):
     return render_template("showpset.html", course=course, pset=pset,
             problems=problems, perm=perm, rates=rates)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/edit/',methods=['POST','GET'])
+@app.route('/pset/<int:pset_id>/edit/',methods=['POST','GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-def editPSet(course_id,pset_id):
-    course = db_session.query(Course).get(course_id)
+def editPSet(pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
-    if None in [pset,course] or pset.course_id != course_id:
+    course = db_session.query(Course).get(pset.course_id)
+    if None in [pset,course]:
         abort(404)
     form = ProblemSetForm(request.form)
     if request.method == "POST" and form.validate():
@@ -317,29 +315,28 @@ def editPSet(course_id,pset_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("editpset.html",course=course,pset=pset)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/delete/', 
-                                            methods=["GET",'POST'])
+@app.route('/pset/<int:pset_id>/delete/', methods=["GET",'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-def deletePSet(course_id,pset_id):
+def deletePSet(pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
+    course = db_session.query(Course).get(pset.course_id)
     if pset is None or pset.course_id != course_id:
         abort(404)
     if request.method == "POST":
         db_session.delete(pset)
         db_session.commit()
-        return redirect(url_for('showCourse',course_id=course_id))
+        return redirect(url_for('showCourse',course_id=course.id))
     return render_template("deletepset.html",course=course,pset=pset)
 
 ### Views for Problems ###
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/new/', 
-                                            methods=['GET','POST'])
+@app.route('/pset/<int:pset_id>/add/', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def newProblem(course_id, pset_id):
-    course = db_session.query(Course).get(course_id)
     pset = db_session.query(ProblemSet).get(pset_id)
-    if None in [pset,course] or pset.course_id != course_id:
+    course = db_session.query(Course).get(pset.course_id)
+    if None in [pset,course]:
         abort(404)
     form = ProblemForm(request.form)
     if request.method == "POST" and form.validate():
@@ -352,12 +349,14 @@ def newProblem(course_id, pset_id):
         return redirect(url_for('showPSet',course_id=course.id,pset_id=pset.id))
     return render_template("newproblem.html",course=course,pset=pset,form=form)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/')
+@app.route('/problem/<int:problem_id>/')
 @login_required
-def showProblem(course_id,pset_id,problem_id):
-    course = db_session.query(Course).get(course_id)
-    pset = db_session.query(ProblemSet).get(pset_id)
+def showProblem(problem_id):
     problem = db_session.query(Problem).get(problem_id)
+    if problem is None:
+        abort(404)
+    pset = db_session.query(ProblemSet).get(problem.problemset_id)
+    course = db_session.query(Course).get(pset.course_id)
     rate = 0
     trials = None 
     for up in current_user.problems:
@@ -365,13 +364,14 @@ def showProblem(course_id,pset_id,problem_id):
             rate = up.rate
             trials = up.trials
             break
+    '''
     if None in [pset,course,problem] or \
                 pset.course_id != course_id or \
                 problem.problemset_id != pset_id:
         abort(404)
+        '''
     if course not in current_user.courses and current_user.type == "student":
         abort(403)
-    #text = bb_to_html(problem.text)
     text = problem.text
     next_problem = problem_id+1 if len(pset.problems)>problem_id else None
         
@@ -379,16 +379,14 @@ def showProblem(course_id,pset_id,problem_id):
         course=course,pset=pset,problem=problem,text=text,
         next_problem=next_problem,rate=rate,trials=trials)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/edit/', methods=['GET','POST'])
+@app.route('/problem/<int:problem_id>/edit/', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-def editProblem(course_id,pset_id,problem_id):
-    course = db_session.query(Course).get(course_id)
-    pset = db_session.query(ProblemSet).get(pset_id)
+def editProblem(problem_id):
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or \
-            pset.course_id != course_id or \
-            problem.problemset_id != pset_id:
+    pset = db_session.query(ProblemSet).get(problem.problemset_id)
+    course = db_session.query(Course).get(pset.course_id)
+    if None in [pset,course,problem]:
         abort(404)
     form = ProblemForm(request.form,problem)
     print form.data
@@ -404,16 +402,14 @@ def editProblem(course_id,pset_id,problem_id):
     return render_template("editproblem.html", course=course, pset=pset, 
                                     problem=problem, form=form)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/delete/', methods=["GET","POST"])
+@app.route('/problem/<int:problem_id>/delete/', methods=["GET","POST"])
 @login_required
 @admin_permission.require(http_exception=403)
-def deleteProblem(course_id,pset_id,problem_id):
-    course = db_session.query(Course).get(course_id)
-    pset = db_session.query(ProblemSet).get(pset_id)
+def deleteProblem(problem_id):
     problem = db_session.query(Problem).get(problem_id)
-    if None in [pset,course,problem] or \
-            pset.course_id != course_id or \
-            problem.problemset_id != pset_id:
+    pset = db_session.query(ProblemSet).get(problem.problemset_id)
+    course = db_session.query(Course).get(pset.course_id)
+    if None in [pset,course,problem]:
         abort(404)
     if request.method == "POST":
         db_session.delete(problem)
@@ -422,9 +418,9 @@ def deleteProblem(course_id,pset_id,problem_id):
     return render_template("deleteproblem.html", course=course, pset=pset,
                             problem=problem)
 
-@app.route('/courses/<int:course_id>/psets/<int:pset_id>/problems/<int:problem_id>/check/', methods=["POST"])
+@app.route('/problem/<int:problem_id>/check/', methods=["POST"])
 @login_required
-def checkProblem(course_id,pset_id,problem_id):
+def checkProblem(problem_id):
     problem = db_session.query(Problem).get(problem_id)
     form = request.form
     messages = []
@@ -458,15 +454,14 @@ def checkProblem(course_id,pset_id,problem_id):
     uproblem.trials.append(trial)
     db_session.commit()
     return jsonify(messages = messages,rate = rate)
-
+'''
 @app.errorhandler(404)
 def error404(e):
-    return render_template('errors/404.html',e=e)
+    return make_response(render_template('errors/404.html',e=e), 404)
 @app.errorhandler(403)
 def error404(e):
-    return render_template('errors/404.html',e=e)
-@app.errorhandler(500)
-    
+    return make_response(render_template('errors/404.html',e=e), 403)
+  '''  
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity=AnonymousIdentity()):
     identity.user = current_user
