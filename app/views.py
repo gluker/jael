@@ -333,7 +333,7 @@ def deletePSet(pset_id):
 @app.route('/pset/<int:pset_id>/add/', methods=['GET','POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-def newProblem(course_id, pset_id):
+def newProblem(pset_id):
     pset = db_session.query(ProblemSet).get(pset_id)
     course = db_session.query(Course).get(pset.course_id)
     if None in [pset,course]:
