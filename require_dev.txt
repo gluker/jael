@@ -48,7 +48,7 @@ reportbug==6.6.3
 requestbuilder==0.2.3
 requests==2.4.3
 roman==2.0.0
-rsa==3.2
+rsa==4.1
 six==1.8.0
 SOAPpy==0.12.22
 SQLAlchemy==1.0.8
