@@ -43,7 +43,7 @@ pyserial==2.6
 python-apt==0.9.3.11
 python-debian==0.1.27
 python-debianbts==1.11
-PyYAML==3.11
+PyYAML==5.4
 reportbug==6.6.3
 requestbuilder==0.2.3
 requests==2.4.3
